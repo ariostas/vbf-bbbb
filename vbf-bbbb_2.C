@@ -1,9 +1,9 @@
 /*
- * diHiggs2.C
+ * vbf-bbbb_2.C
  * 
  * This macro analyses signal and background samples for vbf-bbbb.
  * It analyses the samples by selecting 6 jets, and taking the outer-most jets to be the light jets.
- * To run use "root diHiggs2.C"
+ * To run use "root vbf-bbbb_2.C"
  * 
  * Code by: Andres Rios
  */

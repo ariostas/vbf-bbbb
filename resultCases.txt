@@ -1,0 +1,35 @@
+Case 1
+
+Total events: 1797.82
+Events with all jets: 808.092
+Events with selected jets: 196.852
+Events after dijet cut: 76.5243
+Events after injet cut: 59.3421
+
+
+Case 2
+
+Total events: 1797.82
+Events with all jets: 1104.64
+Events with selected jets: 491.124
+Events after dijet cut: 259.801
+Events after injet cut: 189.269
+
+
+Case 3
+
+Total events: 1797.82
+Events with all jets: 1797.82
+Events with selected jets: 915.215
+Events after dijet cut: 592.626
+Events after injet cut: 592.626
+
+
+Case 4
+
+Total events: 1797.82
+Events with all jets: 1797.82
+Events with selected jets: 915.215
+Events after dijet cut: 176.488
+Events after injet cut: 30.3339
+

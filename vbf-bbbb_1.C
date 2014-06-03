@@ -124,7 +124,7 @@ void analyzeS()
 		for (Int_t iJet=0; iJet<branchJet->GetEntries(); iJet++) { // Jet loop
 			jet = (Jet*) branchJet->At(iJet);
 			
-			if (puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar) == 0){
+			if ((puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar) == 0) && (jet->PT > 40) && (fabs(jet->Eta) < 5)){
 			
 				if(jet->BTag){
 					if(nbJet1 == -1){
@@ -423,7 +423,7 @@ void analyzeB(TString input, Double_t crossSection)
 			for (Int_t iJet=0; iJet<branchJet->GetEntries(); iJet++) { // Jet loop
 				jet = (Jet*) branchJet->At(iJet);
 				
-				if (puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar) == 0){
+				if ((puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar) == 0) && (jet->PT > 40) && (fabs(jet->Eta) < 5)){
 				
 					if(jet->BTag){
 						if(nbJet1 == -1){

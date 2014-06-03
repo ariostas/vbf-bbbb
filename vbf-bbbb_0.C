@@ -116,211 +116,209 @@ void analyzeS()
 	for (Long64_t iEntry=0; iEntry<numberOfEntries; iEntry++) { // Event loop
 		treeReader->ReadEntry(iEntry);
 
-		// Reset index variable
-		nbJet1=nbJet2=nbJet3=nbJet4=nJet1=nJet2=-1;
-
+	// Reset index variable
+	nbJet1=nbJet2=nbJet3=nbJet4=nJet1=nJet2=-1;
 			
-			for (Int_t iJet=0; iJet<branchJet->GetEntries(); iJet++) { // Jet loop
-				jet = (Jet*) branchJet->At(iJet);
-				
-				if (puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar) == 0){
-				
-					if(jet->BTag){
-						if(nbJet1 == -1){
-							nbJet1 = iJet;
-							bJet1 = (Jet*) branchJet->At(nbJet1);
-						}
-						else if(jet->PT > bJet1->PT){
-						
-							nbJet4 = nbJet3;
-							bJet4 = (Jet*) branchJet->At(nbJet4);
-						
-							nbJet3 = nbJet2;
-							bJet3 = (Jet*) branchJet->At(nbJet3);
-						
-							nbJet2 = nbJet1;
-							bJet2 = (Jet*) branchJet->At(nbJet2);
-						
-							nbJet1 = iJet;
-							bJet1 = (Jet*) branchJet->At(nbJet1);
-							
-						}
-						else if(nbJet2 == -1){
-						
-							nbJet2 = iJet;
-							bJet2 = (Jet*) branchJet->At(nbJet2);
-						
-						}
-						else if(jet->PT > bJet2->PT){
-						
-							nbJet4 = nbJet3;
-							bJet4 = (Jet*) branchJet->At(nbJet4);
-						
-							nbJet3 = nbJet2;
-							bJet3 = (Jet*) branchJet->At(nbJet3);
-						
-							nbJet2 = iJet;
-							bJet2 = (Jet*) branchJet->At(nbJet2);
-						
-						}
-						else if(nbJet3 == -1){
-						
-							nbJet3 = iJet;
-							bJet3 = (Jet*) branchJet->At(nbJet3);
-						
-						}
-						else if(jet->PT > bJet3->PT){
-						
-							nbJet4 = nbJet3;
-							bJet4 = (Jet*) branchJet->At(nbJet4);
-						
-							nbJet3 = nbJet2;
-							bJet3 = (Jet*) branchJet->At(nbJet3);
-						
-						}
-						else if(nbJet4 == -1){
-						
-							nbJet4 = iJet;
-							bJet4 = (Jet*) branchJet->At(nbJet4);
-						
-						}
-						else if(jet->PT > bJet4->PT){
-						
-							nbJet4 = iJet;
-							bJet4 = (Jet*) branchJet->At(nbJet4);
-						
-						}
+		for (Int_t iJet=0; iJet<branchJet->GetEntries(); iJet++) { // Jet loop
+			jet = (Jet*) branchJet->At(iJet);
+			
+			if ((puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar) == 0) && (jet->PT > 40) && (fabs(jet->Eta) < 5)){
+			
+				if(jet->BTag){
+					if(nbJet1 == -1){
+						nbJet1 = iJet;
+						bJet1 = (Jet*) branchJet->At(nbJet1);
 					}
-					else{
-						if(nJet1 == -1){
+					else if(jet->PT > bJet1->PT){
+					
+						nbJet4 = nbJet3;
+						bJet4 = (Jet*) branchJet->At(nbJet4);
+					
+						nbJet3 = nbJet2;
+						bJet3 = (Jet*) branchJet->At(nbJet3);
+					
+						nbJet2 = nbJet1;
+						bJet2 = (Jet*) branchJet->At(nbJet2);
+					
+						nbJet1 = iJet;
+						bJet1 = (Jet*) branchJet->At(nbJet1);
 						
-							nJet1 = iJet;
-							Jet1 = (Jet*) branchJet->At(nJet1);
-						
-						}
-						else if((jet->PT > Jet1->PT)){
-						
-							nJet2 = nJet1;
-							Jet2 = (Jet*) branchJet->At(nJet2);
-						
-							nJet1 = iJet;
-							Jet1 = (Jet*) branchJet->At(nJet1);
-						
-							}
-						else if(nJet2 == -1){
-						
-							nJet2 = iJet;
-							Jet2 = (Jet*) branchJet->At(nJet2);
-						
-						}
-						else if(jet->PT > Jet2->PT){
-						
-							nJet2 = iJet;
-							Jet2 = (Jet*) branchJet->At(nJet2);
-						
-						}
+					}
+					else if(nbJet2 == -1){
+					
+						nbJet2 = iJet;
+						bJet2 = (Jet*) branchJet->At(nbJet2);
 					
 					}
+					else if(jet->PT > bJet2->PT){
 					
+						nbJet4 = nbJet3;
+						bJet4 = (Jet*) branchJet->At(nbJet4);
+					
+						nbJet3 = nbJet2;
+						bJet3 = (Jet*) branchJet->At(nbJet3);
+					
+						nbJet2 = iJet;
+						bJet2 = (Jet*) branchJet->At(nbJet2);
+					
+					}
+					else if(nbJet3 == -1){
+					
+						nbJet3 = iJet;
+						bJet3 = (Jet*) branchJet->At(nbJet3);
+					
+					}
+					else if(jet->PT > bJet3->PT){
+					
+						nbJet4 = nbJet3;
+						bJet4 = (Jet*) branchJet->At(nbJet4);
+					
+						nbJet3 = nbJet2;
+						bJet3 = (Jet*) branchJet->At(nbJet3);
+					
+					}
+					else if(nbJet4 == -1){
+					
+						nbJet4 = iJet;
+						bJet4 = (Jet*) branchJet->At(nbJet4);
+					
+					}
+					else if(jet->PT > bJet4->PT){
+					
+						nbJet4 = iJet;
+						bJet4 = (Jet*) branchJet->At(nbJet4);
+					
+					}
+				}
+				else{
+					if(nJet1 == -1){
+					
+						nJet1 = iJet;
+						Jet1 = (Jet*) branchJet->At(nJet1);
+					
+					}
+					else if((jet->PT > Jet1->PT)){
+					
+						nJet2 = nJet1;
+						Jet2 = (Jet*) branchJet->At(nJet2);
+					
+						nJet1 = iJet;
+						Jet1 = (Jet*) branchJet->At(nJet1);
+					
+						}
+					else if(nJet2 == -1){
+					
+						nJet2 = iJet;
+						Jet2 = (Jet*) branchJet->At(nJet2);
+					
+					}
+					else if(jet->PT > Jet2->PT){
+					
+						nJet2 = iJet;
+						Jet2 = (Jet*) branchJet->At(nJet2);
+					
+					}
+				
 				}
 				
-			} // End jet loop
+			}
 			
-			
-			if((nJet1!=-1) && (nJet2!=-1) && (nbJet1!=-1) && (nbJet2!=-1) && (nbJet3!=-1) && (nbJet4!=-1)){
-				
-			jetsSignal++;
-				
-			if((Jet1->PT >40) && (Jet2->PT >40) && (bJet1->PT >40) && (bJet2->PT >40) && (bJet3->PT >40) && (bJet4->PT >40) &&
-			(fabs(Jet1->Eta)<5) && (fabs(Jet2->Eta)<5) && (fabs(bJet1->Eta)<5) && (fabs(bJet2->Eta)<5) && (fabs(bJet3->Eta)<5) && (fabs(bJet4->Eta)<5)){
-			
+		} // End jet loop
+		
+		
+		if((nJet1!=-1) && (nJet2!=-1) && (nbJet1!=-1) && (nbJet2!=-1) && (nbJet3!=-1) && (nbJet4!=-1)){
+		
 			selJetsSignal++;
-					
+				
 			vJet1.SetPtEtaPhiM(Jet1->PT, Jet1->Eta, Jet1->Phi, Jet1->Mass);
 			vJet2.SetPtEtaPhiM(Jet2->PT, Jet2->Eta, Jet2->Phi, Jet2->Mass);
 					
 			vdiJet = vJet1 + vJet2;
-					
+				
 			hMassdiJetS->Fill(vdiJet.M());
-					
+				
 			if((vdiJet.M() > 500) && (fabs(Jet1->Eta - Jet2->Eta) > 2.5)){
+					
+				dijetCutSignal++;
 						
-			dijetCutSignal++;
+				vbJet1.SetPtEtaPhiM(bJet1->PT, bJet1->Eta, bJet1->Phi, bJet1->Mass);
+				vbJet2.SetPtEtaPhiM(bJet2->PT, bJet2->Eta, bJet2->Phi, bJet2->Mass);
+				vbJet3.SetPtEtaPhiM(bJet3->PT, bJet3->Eta, bJet3->Phi, bJet3->Mass);
+				vbJet4.SetPtEtaPhiM(bJet4->PT, bJet4->Eta, bJet4->Phi, bJet4->Mass);
+					
+				Int_t inBJets = 0;
+				if(Jet1->Eta > Jet2->Eta){
 						
-			vbJet1.SetPtEtaPhiM(bJet1->PT, bJet1->Eta, bJet1->Phi, bJet1->Mass);
-			vbJet2.SetPtEtaPhiM(bJet2->PT, bJet2->Eta, bJet2->Phi, bJet2->Mass);
-			vbJet3.SetPtEtaPhiM(bJet3->PT, bJet3->Eta, bJet3->Phi, bJet3->Mass);
-			vbJet4.SetPtEtaPhiM(bJet4->PT, bJet4->Eta, bJet4->Phi, bJet4->Mass);
+					if((bJet1->Eta < Jet1->Eta) && (bJet1->Eta > Jet2->Eta))inBJets++;
+					if((bJet2->Eta < Jet1->Eta) && (bJet2->Eta > Jet2->Eta))inBJets++;
+					if((bJet3->Eta < Jet1->Eta) && (bJet3->Eta > Jet2->Eta))inBJets++;
+					if((bJet4->Eta < Jet1->Eta) && (bJet4->Eta > Jet2->Eta))inBJets++;
 						
-			Int_t inBJets = 0;
-			if(Jet1->Eta > Jet2->Eta){
-							
-				if((bJet1->Eta < Jet1->Eta) && (bJet1->Eta > Jet2->Eta))inBJets++;
-				if((bJet2->Eta < Jet1->Eta) && (bJet2->Eta > Jet2->Eta))inBJets++;
-				if((bJet3->Eta < Jet1->Eta) && (bJet3->Eta > Jet2->Eta))inBJets++;
-				if((bJet4->Eta < Jet1->Eta) && (bJet4->Eta > Jet2->Eta))inBJets++;
-							
-			}
-			else{
-							
-				if((bJet1->Eta > Jet1->Eta) && (bJet1->Eta < Jet2->Eta))inBJets++;
-				if((bJet2->Eta > Jet1->Eta) && (bJet2->Eta < Jet2->Eta))inBJets++;
-				if((bJet3->Eta > Jet1->Eta) && (bJet3->Eta < Jet2->Eta))inBJets++;
-				if((bJet4->Eta > Jet1->Eta) && (bJet4->Eta < Jet2->Eta))inBJets++;
-							
-			}
+				}
+				else{
 						
-			hInJetsS->Fill(inBJets);
+					if((bJet1->Eta > Jet1->Eta) && (bJet1->Eta < Jet2->Eta))inBJets++;
+					if((bJet2->Eta > Jet1->Eta) && (bJet2->Eta < Jet2->Eta))inBJets++;
+					if((bJet3->Eta > Jet1->Eta) && (bJet3->Eta < Jet2->Eta))inBJets++;
+					if((bJet4->Eta > Jet1->Eta) && (bJet4->Eta < Jet2->Eta))inBJets++;
+							
+				}
+					
+				hInJetsS->Fill(inBJets);
+					
+				if(inBJets==4){
 						
-			if(inBJets==4){
-							
-			injetCutSignal++;
-							
-			v4bJet = vbJet1 + vbJet2 + vbJet3 + vbJet4;
+					injetCutSignal++;
 						
-			hMass4bJetsS->Fill(v4bJet.M());
+					v4bJet = vbJet1 + vbJet2 + vbJet3 + vbJet4;
+					
+					hMass4bJetsS->Fill(v4bJet.M());
+						
+					Jet *bJet01, *bJet02, *bJet03, *bJet04;
+						
+					bJet04 = bJet1;
+					if(bJet2->Eta < bJet04->Eta)bJet04 = bJet2;
+					if(bJet3->Eta < bJet04->Eta)bJet04 = bJet3;
+					if(bJet4->Eta < bJet04->Eta)bJet04 = bJet4;
 							
-			Jet *bJet01, *bJet02, *bJet03, *bJet04;
+					bJet01 = bJet04;
+					if(bJet1->Eta > bJet01->Eta)bJet01 = bJet1;
+					if(bJet2->Eta > bJet01->Eta)bJet01 = bJet2;
+					if(bJet3->Eta > bJet01->Eta)bJet01 = bJet3;
+					if(bJet4->Eta > bJet01->Eta)bJet01 = bJet4;
 							
-			bJet04 = bJet1;
-			if(bJet2->Eta < bJet04->Eta)bJet04 = bJet2;
-			if(bJet3->Eta < bJet04->Eta)bJet04 = bJet3;
-			if(bJet4->Eta < bJet04->Eta)bJet04 = bJet4;
+					bJet02 = bJet04;
+					if((bJet1->Eta > bJet02->Eta) && (bJet1 < bJet01))bJet02 = bJet1;
+					if((bJet2->Eta > bJet02->Eta) && (bJet2 < bJet01))bJet02 = bJet2;
+					if((bJet3->Eta > bJet02->Eta) && (bJet3 < bJet01))bJet02 = bJet3;
+					if((bJet4->Eta > bJet02->Eta) && (bJet4 < bJet01))bJet02 = bJet4;
 							
-			bJet01 = bJet04;
-			if(bJet1->Eta > bJet01->Eta)bJet01 = bJet1;
-			if(bJet2->Eta > bJet01->Eta)bJet01 = bJet2;
-			if(bJet3->Eta > bJet01->Eta)bJet01 = bJet3;
-			if(bJet4->Eta > bJet01->Eta)bJet01 = bJet4;
+					bJet03 = bJet04;
+					if((bJet1->Eta > bJet03->Eta) && (bJet1 < bJet02))bJet03 = bJet1;
+					if((bJet2->Eta > bJet03->Eta) && (bJet2 < bJet02))bJet03 = bJet2;
+					if((bJet3->Eta > bJet03->Eta) && (bJet3 < bJet02))bJet03 = bJet3;
+					if((bJet4->Eta > bJet03->Eta) && (bJet4 < bJet02))bJet03 = bJet4;
 							
-			bJet02 = bJet04;
-			if((bJet1->Eta > bJet02->Eta) && (bJet1 < bJet01))bJet02 = bJet1;
-			if((bJet2->Eta > bJet02->Eta) && (bJet2 < bJet01))bJet02 = bJet2;
-			if((bJet3->Eta > bJet02->Eta) && (bJet3 < bJet01))bJet02 = bJet3;
-			if((bJet4->Eta > bJet02->Eta) && (bJet4 < bJet01))bJet02 = bJet4;
+					vbJet01.SetPtEtaPhiM(bJet01->PT, bJet01->Eta, bJet01->Phi, bJet01->Mass);
+					vbJet02.SetPtEtaPhiM(bJet02->PT, bJet02->Eta, bJet02->Phi, bJet02->Mass);
+					vbJet03.SetPtEtaPhiM(bJet03->PT, bJet03->Eta, bJet03->Phi, bJet03->Mass);
+					vbJet04.SetPtEtaPhiM(bJet04->PT, bJet04->Eta, bJet04->Phi, bJet04->Mass);
 							
-			bJet03 = bJet04;
-			if((bJet1->Eta > bJet03->Eta) && (bJet1 < bJet02))bJet03 = bJet1;
-			if((bJet2->Eta > bJet03->Eta) && (bJet2 < bJet02))bJet03 = bJet2;
-			if((bJet3->Eta > bJet03->Eta) && (bJet3 < bJet02))bJet03 = bJet3;
-			if((bJet4->Eta > bJet03->Eta) && (bJet4 < bJet02))bJet03 = bJet4;
+					v2bJetNoCross = vbJet01 + vbJet02;
+					hMass2bJetsNoCrossS->Fill(v2bJetNoCross.M());
+					v2bJetNoCross = vbJet03 + vbJet04;
+					hMass2bJetsNoCrossS->Fill(v2bJetNoCross.M());
 							
-			vbJet01.SetPtEtaPhiM(bJet01->PT, bJet01->Eta, bJet01->Phi, bJet01->Mass);
-			vbJet02.SetPtEtaPhiM(bJet02->PT, bJet02->Eta, bJet02->Phi, bJet02->Mass);
-			vbJet03.SetPtEtaPhiM(bJet03->PT, bJet03->Eta, bJet03->Phi, bJet03->Mass);
-			vbJet04.SetPtEtaPhiM(bJet04->PT, bJet04->Eta, bJet04->Phi, bJet04->Mass);
-							
-			v2bJetNoCross = vbJet01 + vbJet02;
-			hMass2bJetsNoCrossS->Fill(v2bJetNoCross.M());
-			v2bJetNoCross = vbJet03 + vbJet04;
-			hMass2bJetsNoCrossS->Fill(v2bJetNoCross.M());
-							
-			v2bJetCross = vbJet01 + vbJet03;
-			hMass2bJetsCrossS->Fill(v2bJetCross.M());
-			v2bJetCross = vbJet02 + vbJet04;
-			hMass2bJetsCrossS->Fill(v2bJetCross.M());
+					v2bJetCross = vbJet01 + vbJet03;
+					hMass2bJetsCrossS->Fill(v2bJetCross.M());
+					v2bJetCross = vbJet02 + vbJet04;
+					hMass2bJetsCrossS->Fill(v2bJetCross.M());
 			
-		}}}}
+				}
+				
+			}
+			
+		}
 		
 	} // End event loop
 
@@ -381,7 +379,7 @@ void analyzeB(TString input, Double_t crossSection)
 		for (Int_t iJet=0; iJet<branchJet->GetEntries(); iJet++) { // Jet loop
 			jet = (Jet*) branchJet->At(iJet);
 			
-			if (puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar) == 0){
+			if ((puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar) == 0) && (jet->PT > 40) && (fabs(jet->Eta) < 5)){
 			
 				if(jet->BTag){
 					if(nbJet1 == -1){

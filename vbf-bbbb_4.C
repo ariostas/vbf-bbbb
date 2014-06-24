@@ -1,8 +1,8 @@
 /*
- * vbf-bbbb_1.C
+ * vbf-bbbb_4.C
  * 
  * This macro analyses signal and background samples for vbf-bbbb.
- * It analyses the samples by selecting 3 bjets and 3 light jets.
+ * It analyses the samples by selecting 0 bjets and 6 light jets.
  * To run use "root vbf-bbbb_0.C"
  * 
  * The selection of events consist in requiring all jets to pass 
@@ -66,7 +66,6 @@ TH1D *hdRJJB = new TH1D("hdRJJB", "hdRJJB", 100, -0.5, 10.5);
 TH1D *hdRBJB = new TH1D("hdRBJB", "hdRBJB", 100, -0.5, 10.5);
 TH1D *hdEB = new TH1D("hdEB", "hdEB", 100, -0.5, 10.5);
 
-
 // Initialyze storage variables
 Double_t selectionSignal = 0, dijetCutSignal = 0, injetCutSignal = 0, higgsCutSignal=0, dRbCutSignal=0, dRjCutSignal=0;
 Double_t selectionBackground = 0, dijetCutBackground = 0, injetCutBackground = 0, higgsCutBackground=0, dRbCutBackground=0, dRjCutBackground=0;
@@ -78,7 +77,7 @@ Double_t ErrorselectionBackground = 0, ErrordijetCutBackground = 0, ErrorinjetCu
  * MAIN FUNCTION
  */
 
-void vbf_bbbb_1(TString backgroundSample){
+void vbf_bbbb_4(TString backgroundSample){
 	
 	BackgroundSample = backgroundSample;
 	
@@ -237,8 +236,8 @@ void analyze(TString inputfile, Double_t crossSection, bool SorB)
 	Jet *jet;
 
 	// Set up storage variables
-	Jet *bJet1, *bJet2, *bJet3, *bJet4, *Jet1, *Jet2, *Jet3;
-	Int_t nbJet1, nbJet2, nbJet3, nbJet4, nJet1, nJet2, nJet3;
+	Jet *bJet1, *bJet2, *bJet3, *bJet4, *Jet1, *Jet2, *Jet3, *Jet4, *Jet5, *Jet6;
+	Int_t nbJet1, nbJet2, nbJet3, nbJet4, nJet1, nJet2, nJet3, nJet4, nJet5, nJet6;
 	LHEFEvent *event;
 	Double_t weight;
 	TLorentzVector vbJet1, vbJet2, vbJet3, vbJet4, vJet1, vJet2, vdiJet, v4bJet, v2bJetNoCross, v2bJetCross, vbJet01, vbJet02, vbJet03, vbJet04;
@@ -257,7 +256,7 @@ void analyze(TString inputfile, Double_t crossSection, bool SorB)
 		treeReader->ReadEntry(iEntry);
 
 		// Reset index variables
-		nbJet1=nbJet2=nbJet3=nbJet4=nJet1=nJet2=nJet3=-1;
+		nbJet1=nbJet2=nbJet3=nbJet4=nJet1=nJet2=nJet3=nJet4=nJet5=nJet6=-1;
 
 			
 		for (Int_t iJet=0; iJet<branchJet->GetEntries(); iJet++) { // Jet loop
@@ -272,64 +271,11 @@ void analyze(TString inputfile, Double_t crossSection, bool SorB)
 					}
 					else if(jet->PT > bJet1->PT){
 					
-						nbJet4 = nbJet3;
-						bJet4 = (Jet*) branchJet->At(nbJet4);
-					
-						nbJet3 = nbJet2;
-						bJet3 = (Jet*) branchJet->At(nbJet3);
-					
-						nbJet2 = nbJet1;
-						bJet2 = (Jet*) branchJet->At(nbJet2);
-					
 						nbJet1 = iJet;
 						bJet1 = (Jet*) branchJet->At(nbJet1);
 					
 					}
-					else if(nbJet2 == -1){
 					
-						nbJet2 = iJet;
-						bJet2 = (Jet*) branchJet->At(nbJet2);
-					
-					}
-					else if(jet->PT > bJet2->PT){
-					
-						nbJet4 = nbJet3;
-						bJet4 = (Jet*) branchJet->At(nbJet4);
-					
-						nbJet3 = nbJet2;
-						bJet3 = (Jet*) branchJet->At(nbJet3);
-					
-						nbJet2 = iJet;
-						bJet2 = (Jet*) branchJet->At(nbJet2);
-					
-					}
-					else if(nbJet3 == -1){
-					
-						nbJet3 = iJet;
-						bJet3 = (Jet*) branchJet->At(nbJet3);
-					
-					}
-					else if(jet->PT > bJet3->PT){
-					
-						nbJet4 = nbJet3;
-						bJet4 = (Jet*) branchJet->At(nbJet4);
-					
-						nbJet3 = nbJet2;
-						bJet3 = (Jet*) branchJet->At(nbJet3);
-					
-					}
-					else if(nbJet4 == -1){
-					
-						nbJet4 = iJet;
-						bJet4 = (Jet*) branchJet->At(nbJet4);
-					
-					}
-					else if(jet->PT > bJet4->PT){
-					
-						nbJet4 = iJet;
-						bJet4 = (Jet*) branchJet->At(nbJet4);
-					
-					}
 				}
 				else{
 					if(nJet1 == -1){
@@ -339,7 +285,16 @@ void analyze(TString inputfile, Double_t crossSection, bool SorB)
 					
 					}
 					else if((jet->PT > Jet1->PT)){
-					
+						
+						nJet6 = nJet5;
+						Jet6 = (Jet*) branchJet->At(nJet6);
+						
+						nJet5 = nJet4;
+						Jet5 = (Jet*) branchJet->At(nJet5);
+						
+						nJet4 = nJet3;
+						Jet4 = (Jet*) branchJet->At(nJet4);
+						
 						nJet3 = nJet2;
 						Jet3 = (Jet*) branchJet->At(nJet3);
 					
@@ -357,7 +312,16 @@ void analyze(TString inputfile, Double_t crossSection, bool SorB)
 					
 					}
 					else if(jet->PT > Jet2->PT){
-					
+						
+						nJet6 = nJet5;
+						Jet6 = (Jet*) branchJet->At(nJet6);
+						
+						nJet5 = nJet4;
+						Jet5 = (Jet*) branchJet->At(nJet5);
+						
+						nJet4 = nJet3;
+						Jet4 = (Jet*) branchJet->At(nJet4);
+						
 						nJet3 = nJet2;
 						Jet3 = (Jet*) branchJet->At(nJet3);
 					
@@ -372,9 +336,63 @@ void analyze(TString inputfile, Double_t crossSection, bool SorB)
 					
 					}
 					else if(jet->PT > Jet3->PT){
-					
+						
+						nJet6 = nJet5;
+						Jet6 = (Jet*) branchJet->At(nJet6);
+						
+						nJet5 = nJet4;
+						Jet5 = (Jet*) branchJet->At(nJet5);
+						
+						nJet4 = nJet3;
+						Jet4 = (Jet*) branchJet->At(nJet4);
+						
 						nJet3 = iJet;
 						Jet3 = (Jet*) branchJet->At(nJet3);
+					
+					}
+					else if(nJet4==-1){
+					
+						nJet4 = iJet;
+						Jet4 = (Jet*) branchJet->At(nJet4);
+					
+					}
+					else if(jet->PT > Jet4->PT){
+						
+						nJet6 = nJet5;
+						Jet6 = (Jet*) branchJet->At(nJet6);
+						
+						nJet5 = nJet4;
+						Jet5 = (Jet*) branchJet->At(nJet5);
+						
+						nJet4 = iJet;
+						Jet4 = (Jet*) branchJet->At(nJet4);
+					
+					}
+					else if(nJet5==-1){
+					
+						nJet5 = iJet;
+						Jet5 = (Jet*) branchJet->At(nJet5);
+					
+					}
+					else if(jet->PT > Jet5->PT){
+						
+						nJet6 = nJet5;
+						Jet6 = (Jet*) branchJet->At(nJet6);
+						
+						nJet5 = iJet;
+						Jet5 = (Jet*) branchJet->At(nJet5);
+					
+					}
+					else if(nJet6==-1){
+					
+						nJet6 = iJet;
+						Jet6 = (Jet*) branchJet->At(nJet6);
+					
+					}
+					else if(jet->PT > Jet6->PT){
+						
+						nJet6 = iJet;
+						Jet6 = (Jet*) branchJet->At(nJet6);
 					
 					}
 				
@@ -385,7 +403,7 @@ void analyze(TString inputfile, Double_t crossSection, bool SorB)
 		}// End jet loop
 		
 		// Check if there are three selected bjets and non-bjets
-		if((nJet1!=-1) && (nJet2!=-1) && (nJet3!=-1) && (nbJet1!=-1) && (nbJet2!=-1) && (nbJet3!=-1) && (nbJet4==-1)){
+		if((nJet1!=-1) && (nJet2!=-1) && (nJet3!=-1) && (nJet4!=-1) && (nJet5!=-1) && (nJet6!=-1) && (nbJet1==-1)){
 			
 			weight = 1;
 			if(!SorB){
@@ -398,25 +416,56 @@ void analyze(TString inputfile, Double_t crossSection, bool SorB)
 			tempErrorSelection += weight*weight;
 			
 			// Choose the light jets to be the outermost between the non-btagged jets
-			Jet *tempJet1, *tempJet2, *tempJet3;
+			Jet *tempJet1, *tempJet2, *tempJet3, *tempJet4, *tempJet5, *tempJet6;
 			
-			tempJet3 = Jet1;
-			if(Jet2->Eta < tempJet3->Eta)tempJet3 = Jet2;
-			if(Jet3->Eta < tempJet3->Eta)tempJet3 = Jet3;
+			tempJet6 = Jet1;
+			if(Jet2->Eta < tempJet6->Eta)tempJet6 = Jet2;
+			if(Jet3->Eta < tempJet6->Eta)tempJet6 = Jet3;
+			if(Jet4->Eta < tempJet6->Eta)tempJet6 = Jet4;
+			if(Jet5->Eta < tempJet6->Eta)tempJet6 = Jet5;
+			if(Jet6->Eta < tempJet6->Eta)tempJet6 = Jet6;
 			
-			tempJet1 = tempJet3;
-			if(Jet1->Eta > tempJet1->Eta)tempJet1 = Jet1;
+			tempJet1 = Jet1;
 			if(Jet2->Eta > tempJet1->Eta)tempJet1 = Jet2;
 			if(Jet3->Eta > tempJet1->Eta)tempJet1 = Jet3;
+			if(Jet4->Eta > tempJet1->Eta)tempJet1 = Jet4;
+			if(Jet5->Eta > tempJet1->Eta)tempJet1 = Jet5;
+			if(Jet6->Eta > tempJet1->Eta)tempJet1 = Jet6;
 			
-			tempJet2 = tempJet3;
-			if((Jet1->Eta > tempJet2->Eta) && (Jet1->Eta < tempJet1->Eta))tempJet2 = Jet1;
-			if((Jet2->Eta > tempJet2->Eta) && (Jet2->Eta < tempJet1->Eta))tempJet2 = Jet2;
-			if((Jet3->Eta > tempJet2->Eta) && (Jet3->Eta < tempJet1->Eta))tempJet2 = Jet3;
+			if((Jet1 != tempJet1) && (Jet1 != tempJet4)) tempJet2 = Jet1;
+			else if((Jet2 != tempJet1) && (Jet2 != tempJet4)) tempJet2 = Jet2;
+			else if((Jet3 != tempJet1) && (Jet3 != tempJet4)) tempJet2 = Jet3;
+			else if((Jet4 != tempJet1) && (Jet4 != tempJet4)) tempJet2 = Jet4;
+			else if((Jet5 != tempJet1) && (Jet5 != tempJet4)) tempJet2 = Jet5;
+			else if((Jet6 != tempJet1) && (Jet6 != tempJet4)) tempJet2 = Jet6;
+			
+			if((Jet1 != tempJet1) && (Jet1 != tempJet4) && (Jet1 != tempJet2)) tempJet3 = Jet1;
+			else if((Jet2 != tempJet1) && (Jet2 != tempJet4) && (Jet2 != tempJet2)) tempJet3 = Jet2;
+			else if((Jet3 != tempJet1) && (Jet3 != tempJet4) && (Jet3 != tempJet2)) tempJet3 = Jet3;
+			else if((Jet4 != tempJet1) && (Jet4 != tempJet4) && (Jet4 != tempJet2)) tempJet3 = Jet4;
+			else if((Jet5 != tempJet1) && (Jet5 != tempJet4) && (Jet5 != tempJet2)) tempJet3 = Jet5;
+			else if((Jet6 != tempJet1) && (Jet6 != tempJet4) && (Jet6 != tempJet2)) tempJet3 = Jet6;
+			
+			if((Jet1 != tempJet1) && (Jet1 != tempJet4) && (Jet1 != tempJet2) && (Jet1 != tempJet3)) tempJet4 = Jet1;
+			else if((Jet2 != tempJet1) && (Jet2 != tempJet4) && (Jet2 != tempJet2) && (Jet2 != tempJet3)) tempJet4 = Jet2;
+			else if((Jet3 != tempJet1) && (Jet3 != tempJet4) && (Jet3 != tempJet2) && (Jet3 != tempJet3)) tempJet4 = Jet3;
+			else if((Jet4 != tempJet1) && (Jet4 != tempJet4) && (Jet4 != tempJet2) && (Jet4 != tempJet3)) tempJet4 = Jet4;
+			else if((Jet5 != tempJet1) && (Jet5 != tempJet4) && (Jet5 != tempJet2) && (Jet5 != tempJet3)) tempJet4 = Jet5;
+			else if((Jet6 != tempJet1) && (Jet6 != tempJet4) && (Jet6 != tempJet2) && (Jet6 != tempJet3)) tempJet4 = Jet6;
+			
+			if((Jet1 != tempJet1) && (Jet1 != tempJet4) && (Jet1 != tempJet2) && (Jet1 != tempJet3) && (Jet1 != tempJet4)) tempJet5 = Jet1;
+			else if((Jet2 != tempJet1) && (Jet2 != tempJet4) && (Jet2 != tempJet2) && (Jet2 != tempJet3) && (Jet2 != tempJet4)) tempJet5 = Jet2;
+			else if((Jet3 != tempJet1) && (Jet3 != tempJet4) && (Jet3 != tempJet2) && (Jet3 != tempJet3) && (Jet3 != tempJet4)) tempJet5 = Jet3;
+			else if((Jet4 != tempJet1) && (Jet4 != tempJet4) && (Jet4 != tempJet2) && (Jet4 != tempJet3) && (Jet4 != tempJet4)) tempJet5 = Jet4;
+			else if((Jet5 != tempJet1) && (Jet5 != tempJet4) && (Jet5 != tempJet2) && (Jet5 != tempJet3) && (Jet5 != tempJet4)) tempJet5 = Jet5;
+			else if((Jet6 != tempJet1) && (Jet6 != tempJet4) && (Jet6 != tempJet2) && (Jet6 != tempJet3) && (Jet6 != tempJet4)) tempJet5 = Jet6;
 			
 			Jet1 = tempJet1;
-			Jet2 = tempJet3;
-			bJet4 = tempJet2;
+			Jet2 = tempJet6;
+			bJet1 = tempJet2;
+			bJet2 = tempJet3;
+			bJet3 = tempJet4;
+			bJet4 = tempJet5;
 			
 			// Set up four-vectors for light jets
 			vJet1.SetPtEtaPhiM(Jet1->PT, Jet1->Eta, Jet1->Phi, Jet1->Mass);
@@ -424,8 +473,8 @@ void analyze(TString inputfile, Double_t crossSection, bool SorB)
 			
 			vdiJet = vJet1 + vJet2;
 			
-			(SorB ? hMassdiJetS : hMassdiJetB)->Fill(vdiJet.M());
-			(SorB ? hdES : hdEB)->Fill(fabs(Jet1->Eta - Jet2->Eta));
+			(SorB ? hMassdiJetS : hMassdiJetB)->Fill(vdiJet.M(), weight);
+			(SorB ? hdES : hdEB)->Fill(fabs(Jet1->Eta - Jet2->Eta), weight);
 			
 			// Check if it satisfies the dijet cut requirements
 			if((vdiJet.M() > 800) && (fabs(Jet1->Eta - Jet2->Eta) > 3.5)){
@@ -456,14 +505,14 @@ void analyze(TString inputfile, Double_t crossSection, bool SorB)
 					
 				}
 				
-				(SorB ? hInJetsS : hInJetsB)->Fill(inBJets);
+				(SorB ? hInJetsS : hInJetsB)->Fill(inBJets, weight);
 				
 				// Chec if all bjets are between light jets
 				if(inBJets==4){
 	
 					tempInjetCut += weight;
 					tempErrorInjetCut += weight*weight;
-					
+	
 					TLorentzVector test11, test12, test21, test22, test31, test32;
 					test11 = vbJet1 + vbJet2;
 					test12 = vbJet3 + vbJet4;
@@ -471,32 +520,32 @@ void analyze(TString inputfile, Double_t crossSection, bool SorB)
 					test22 = vbJet2 + vbJet4;
 					test31 = vbJet1 + vbJet4;
 					test32 = vbJet3 + vbJet2;
-						
+					
 					if( ((test11.M() > 110) && (test11.M() < 140) && (test12.M() > 110) && (test12.M() < 140)) || 
 						((test21.M() > 110) && (test21.M() < 140) && (test22.M() > 110) && (test22.M() < 140)) ||
 						((test31.M() > 110) && (test31.M() < 140) && (test32.M() > 110) && (test32.M() < 140))){
-								
+							
 						tempHiggsCut += weight;
 						tempErrorHiggsCut += weight*weight;
-								 
+							 
 						Double_t mindRb, mindRb1, mindRb2, mindRb3, mindRb4, mindRb5, mindRb6;
-			
+		
 						mindRb1 = deltaR(bJet1->Eta, bJet2->Eta, bJet1->Phi, bJet2->Phi);
 						mindRb2 = deltaR(bJet1->Eta, bJet3->Eta, bJet1->Phi, bJet3->Phi);
 						mindRb3 = deltaR(bJet1->Eta, bJet4->Eta, bJet1->Phi, bJet4->Phi);
 						mindRb4 = deltaR(bJet2->Eta, bJet3->Eta, bJet2->Phi, bJet3->Phi);
 						mindRb5 = deltaR(bJet2->Eta, bJet4->Eta, bJet2->Phi, bJet4->Phi);
 						mindRb6 = deltaR(bJet3->Eta, bJet4->Eta, bJet3->Phi, bJet4->Phi);
-			
+		
 						mindRb = mindRb1;
 						if(mindRb2 < mindRb) mindRb = mindRb2;
 						if(mindRb3 < mindRb) mindRb = mindRb3;
 						if(mindRb4 < mindRb) mindRb = mindRb4;
 						if(mindRb5 < mindRb) mindRb = mindRb5;
 						if(mindRb6 < mindRb) mindRb = mindRb6;
-					
-						(SorB ? hdRJJS : hdRJJB)->Fill(mindRb);
-					
+				
+						(SorB ? hdRJJS : hdRJJB)->Fill(mindRb, weight);
+				
 						if(mindRb > 1){
 							
 							tempDRbCut += weight;
@@ -504,14 +553,14 @@ void analyze(TString inputfile, Double_t crossSection, bool SorB)
 							
 							Double_t dRJ = deltaR(Jet1->Eta, Jet2->Eta, Jet1->Eta, Jet2->Eta);
 							
-							(SorB ? hdRBJS : hdRBJB)->Fill(dRJ);
+							(SorB ? hdRBJS : hdRBJB)->Fill(dRJ, weight);
 							
 							if(dRJ > 6){
-								tempDRjCut += weight;
+								tempDRjCut +=weight;
 								tempErrorDRjCut += weight*weight;
 							}
-						}
-						
+						}				
+					
 					}
 	
 				}
@@ -551,12 +600,12 @@ void saveResults(const TString backgroundSample){
 	gStyle->SetOptStat(kFALSE);
 
 
-	histogram(hdRJJS, hdRJJB, c1, "minimum deltaR between bjets", "Count", "./Histograms1/histogramdRbb_" + backgroundSample + ".jpg");
-	histogram(hdRBJS, hdRBJB, c1, "deltaR betwenn light jets", "Count", "./Histograms1/histogramdRjj_" + backgroundSample + ".jpg");
-	histogram(hdES, hdEB, c1, "|d_eta| between light jets", "Count", "./Histograms1/histogramdEJ_" + backgroundSample + ".jpg");
+	histogram(hdRJJS, hdRJJB, c1, "minimum deltaR between bjets", "Count", "./Histograms4/histogramdRbb_" + backgroundSample + ".jpg");
+	histogram(hdRBJS, hdRBJB, c1, "deltaR betwenn light jets", "Count", "./Histograms4/histogramdRjj_" + backgroundSample + ".jpg");
+	histogram(hdES, hdEB, c1, "|d_eta| between light jets", "Count", "./Histograms4/histogramdEJ_" + backgroundSample + ".jpg");
 	
-	histogram(hMassdiJetS, hMassdiJetB, c1, "Mass diJet system", "Count", "./Histograms1/histogramMassdiJets_" + backgroundSample + ".jpg");
-	histogram(hInJetsS, hInJetsB, c1, "Number of bjets between light jets", "Count", "./Histograms1/histogramInBJets_" + backgroundSample + ".jpg");
+	histogram(hMassdiJetS, hMassdiJetB, c1, "Mass diJet system", "Count", "./Histograms4/histogramMassdiJets_" + backgroundSample + ".jpg");
+	histogram(hInJetsS, hInJetsB, c1, "Number of bjets between light jets", "Count", "./Histograms4/histogramInBJets_" + backgroundSample + ".jpg");
 	
 	// Print event yields
 	cout << "Signal" << endl << endl;

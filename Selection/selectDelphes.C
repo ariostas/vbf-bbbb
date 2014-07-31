@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// Select bbtautau events from delphes
+// Select vbf-bbbb events from delphes
 //
 // Run with:
 // root -l -q selectDelphes.C+\(\"_inputfile_name_\",_file_cross_section_\)

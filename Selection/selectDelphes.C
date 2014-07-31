@@ -1,7 +1,7 @@
 //-------------------------------------------------------------------
 // Select bbtautau events from delphes
 //
-// execute with:
+// Run with:
 // root -l -q selectDelphes.C+\(\"_inputfile_name_\",_file_cross_section_\)
 //
 //-------------------------------------------------------------------
@@ -22,6 +22,7 @@
 #include <iomanip>
 #include <fstream>
 #include "Math/LorentzVector.h"
+#include "JEC/JECHelper/interface/jcorr.h"
 
 #include "modules/Delphes.h"                   // delphes
 #include "ExRootAnalysis/ExRootTreeReader.h"   // delphes
@@ -30,9 +31,18 @@
 #endif
 
 int puJetID( Float_t eta, Float_t meanSqDeltaR, Float_t betastar);
+double doJetcorr(mithep::jcorr *corrector,Jet* ijet,double rho_2,double rho_1,double rho_0);
 
 void selectDelphes(const TString inputfile="root://eoscms.cern.ch//store/group/phys_higgs/upgrade/PhaseII/Configuration4v2/140PileUp/HHToGGBB_14TeV/HHToGGBB_14TeV_0.root",
 const Double_t xsec=1341.36923) {
+	
+	mithep::jcorr *corrector = new mithep::jcorr;
+	char *PATH = getenv("CMSSW_BASE"); assert(PATH);
+	TString path(TString::Format("%s/src/JEC/JECHelper/data/JetCorrections_phase2/", PATH));
+	corrector->AddJetCorr(path+"Delphes_V1_MC_L1FastJet_AK4PF.txt");
+	corrector->AddJetCorr(path+"Delphes_V1_MC_L2Relative_AK4PF.txt");
+	corrector->AddJetCorr(path+"Delphes_V1_MC_L3Absolute_AK4PFl1.txt");
+	corrector->setup();
 
 	const TString inputFile = inputfile + ".txt";
 	ifstream ifs(inputFile);
@@ -53,7 +63,19 @@ const Double_t xsec=1341.36923) {
 	Long64_t numberOfEntries = treeReader->GetEntries();
 
 	// set up branches to read in from file
-	TClonesArray *branchJet = treeReader->UseBranch("Jet");
+	TClonesArray *branchMuon = treeReader->UseBranch("Muon");
+	TClonesArray *branchElectron = treeReader->UseBranch("Electron");
+	TClonesArray *branchRho = treeReader->UseBranch("Rho");
+	TClonesArray *branchJet = treeReader->UseBranch("RawJet");
+	
+	TString tempString = "Reading " + filename + " ...";
+	tempString.Resize(50);
+	cout << tempString;
+	
+	if (!(branchJet)) {
+		cout << "File broken" << endl;
+		continue;
+	}
 
 	// set up loop variables
 	Jet *jet;
@@ -63,6 +85,8 @@ const Double_t xsec=1341.36923) {
 	Int_t nbJet1, nbJet2, nbJet3, nbJet4, nJet1, nJet2;
 	Double_t weight=3000000*xsec;
 	UInt_t nEvents=0;
+	Int_t nLeptons=0, nJets=0, nJetsHighPt=0;
+	Double_t corrb1=0, corrb2=0, corrb3=0, corrb4=0, corrj1=0, corrj2=0;
 
 	const TString outfile = "/afs/cern.ch/work/a/ariostas/private/vbf-bbbb_temp/" + inputfile + "/" + filename;
 
@@ -83,6 +107,15 @@ const Double_t xsec=1341.36923) {
 	outTree->Branch("bJet4",   		"Jet", &bJet4); // 4-vector for second jet
 	outTree->Branch("Jet1",   		"Jet", &Jet1); // 4-vector for second jet
 	outTree->Branch("Jet2",   		"Jet", &Jet2); // 4-vector for second jet
+	outTree->Branch("nLeptons",		&nLeptons,    "nLeptons/I");  // number of jets
+	outTree->Branch("nJets",		&nJets,    "nJets/I");  // number of jets
+	outTree->Branch("nJetsHighPt",	&nJetsHighPt,    "nJetsHighPt/I");  // number of jets
+	outTree->Branch("corrb1",		&corrb1,    "corrb1/D");  // number of jets
+	outTree->Branch("corrb2",		&corrb2,    "corrb2/D");  // number of jets
+	outTree->Branch("corrb3",		&corrb3,    "corrb3/D");  // number of jets
+	outTree->Branch("corrb4",		&corrb4,    "corrb4/D");  // number of jets
+	outTree->Branch("corrj1",		&corrj1,    "corrj1/D");  // number of jets
+	outTree->Branch("corrj2",		&corrj2,    "corrj2/D");  // number of jets
 
 
 	for (Int_t iEntry=0; iEntry<numberOfEntries; iEntry++) { // entry loop
@@ -90,74 +123,95 @@ const Double_t xsec=1341.36923) {
 
 		// Reset index variables
 		nbJet1=nbJet2=nbJet3=nbJet4=nJet1=nJet2=-1;
+		nLeptons=nJets=nJetsHighPt=corrb1=corrb2=corrb3=corrb4=corrj1=corrj2=0;
 		
 		// Select bjets and light jets
 		for (Int_t iJet=0; iJet<branchJet->GetEntries(); iJet++) { // Jet loop
 			jet = (Jet*) branchJet->At(iJet);
+
+			double corr = doJetcorr(corrector,jet,((Rho*) branchRho->At(2))->Rho,((Rho*) branchRho->At(1))->Rho,((Rho*) branchRho->At(0))->Rho);
 			
-			if ((puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar) == 0) && (jet->PT > 40) && (fabs(jet->Eta) < 5)){
+			if ((puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar) == 0) && (corr*jet->PT > 30) && (fabs(jet->Eta) < 5)){
+				
+				nJets++;
+				
+				if(corr*jet->PT > 40) nJetsHighPt++;
 			
 				if(jet->BTag){
 					if(nbJet1 == -1){
+						corrb1 = corr;
 						nbJet1 = iJet;
 						bJet1 = (Jet*) branchJet->At(nbJet1);
 					}
-					else if(jet->PT > bJet1->PT){
-					
+					else if(corr*jet->PT > corrb1*bJet1->PT){
+						
+						corrb4 = corrb3;
 						nbJet4 = nbJet3;
 						bJet4 = (Jet*) branchJet->At(nbJet4);
-					
+						
+						corrb3 = corrb2;
 						nbJet3 = nbJet2;
 						bJet3 = (Jet*) branchJet->At(nbJet3);
-					
+						
+						corrb2 = corrb1;
 						nbJet2 = nbJet1;
 						bJet2 = (Jet*) branchJet->At(nbJet2);
-					
+						
+						corrb1 = corr;
 						nbJet1 = iJet;
 						bJet1 = (Jet*) branchJet->At(nbJet1);
 						
 					}
 					else if(nbJet2 == -1){
-					
+						
+						corrb2 = corr;
 						nbJet2 = iJet;
 						bJet2 = (Jet*) branchJet->At(nbJet2);
 					
 					}
-					else if(jet->PT > bJet2->PT){
-					
+					else if(corr*jet->PT > corrb2*bJet2->PT){
+						
+						corrb4 = corrb3;
 						nbJet4 = nbJet3;
 						bJet4 = (Jet*) branchJet->At(nbJet4);
-					
+						
+						corrb3 = corrb2;
 						nbJet3 = nbJet2;
 						bJet3 = (Jet*) branchJet->At(nbJet3);
-					
+						
+						corrb2 = corr;
 						nbJet2 = iJet;
 						bJet2 = (Jet*) branchJet->At(nbJet2);
 					
 					}
 					else if(nbJet3 == -1){
-					
+						
+						corrb3 = corr;
 						nbJet3 = iJet;
 						bJet3 = (Jet*) branchJet->At(nbJet3);
 					
 					}
-					else if(jet->PT > bJet3->PT){
-					
+					else if(corr*jet->PT > corrb3*bJet3->PT){
+						
+						corrb4 = corrb3;
 						nbJet4 = nbJet3;
 						bJet4 = (Jet*) branchJet->At(nbJet4);
-					
-						nbJet3 = nbJet2;
+						
+						corrb3 = corr;
+						nbJet3 = iJet;
 						bJet3 = (Jet*) branchJet->At(nbJet3);
 					
 					}
 					else if(nbJet4 == -1){
-					
+						
+						corrb4 = corr;
 						nbJet4 = iJet;
 						bJet4 = (Jet*) branchJet->At(nbJet4);
 					
 					}
-					else if(jet->PT > bJet4->PT){
-					
+					else if(corr*jet->PT > corrb4*bJet4->PT){
+						
+						corrb4 = corr;
 						nbJet4 = iJet;
 						bJet4 = (Jet*) branchJet->At(nbJet4);
 					
@@ -165,28 +219,33 @@ const Double_t xsec=1341.36923) {
 				}
 				else{
 					if(nJet1 == -1){
-					
+						
+						corrj1 = corr;
 						nJet1 = iJet;
 						Jet1 = (Jet*) branchJet->At(nJet1);
 					
 					}
-					else if((jet->PT > Jet1->PT)){
-					
+					else if(corr*jet->PT > corrj1*Jet1->PT){
+						
+						corrj2 = corrj1;
 						nJet2 = nJet1;
 						Jet2 = (Jet*) branchJet->At(nJet2);
-					
+						
+						corrj1 = corr;
 						nJet1 = iJet;
 						Jet1 = (Jet*) branchJet->At(nJet1);
 					
 						}
 					else if(nJet2 == -1){
-					
+						
+						corrj2 = corr;
 						nJet2 = iJet;
 						Jet2 = (Jet*) branchJet->At(nJet2);
 					
 					}
-					else if(jet->PT > Jet2->PT){
-					
+					else if(corr*jet->PT > corrj2*Jet2->PT){
+						
+						corrj2 = corr;
 						nJet2 = iJet;
 						Jet2 = (Jet*) branchJet->At(nJet2);
 					
@@ -198,6 +257,8 @@ const Double_t xsec=1341.36923) {
 			
 		} // End jet loop
 		
+		nLeptons = branchElectron->GetEntries() + branchMuon->GetEntries();
+		
 		// Check if there are four bjets and two light jets
 		if((nJet1!=-1) && (nJet2!=-1) && (nbJet1!=-1) && (nbJet2!=-1) && (nbJet3!=-1) && (nbJet4!=-1)) outTree->Fill();
 
@@ -208,8 +269,7 @@ const Double_t xsec=1341.36923) {
 	// close file
 	outFile->Close();
 
-	cout << "----SUMMARY----" << endl;
-	cout << " input file " << filename << " selection done " << endl;
+	cout << "selection done." << endl;
 
 	}
 
@@ -248,4 +308,19 @@ int puJetID( Float_t eta, Float_t meanSqDeltaR, Float_t betastar) {
 	//cout << "forward 1" << endl;
 	return 1;
 
+}
+
+
+double doJetcorr(mithep::jcorr *corrector,Jet* ijet,double rho_2,double rho_1,double rho_0)
+{
+  double area = TMath::Sqrt(ijet->AreaX*ijet->AreaX+ijet->AreaY*ijet->AreaY);
+  //std::cout << "Area pT " << area << std::endl;
+  double rrho=0;
+  if(fabs(ijet->Eta)>4.0) rrho=rho_2;
+  else if(fabs(ijet->Eta)>2.5) rrho=rho_1;
+  else rrho=rho_0;
+  double corr = corrector->getCorrection(ijet->PT,ijet->Eta,rrho,area);
+  //std::cout << ijet->PT << " " << corr << std::endl;
+  //return 1.0;
+  return corr;
 }

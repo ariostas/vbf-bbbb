@@ -74,6 +74,12 @@ TH1D *hdEB = new TH1D("hdEB", "hdEB", 100, -0.5, 10.5);
 
 TH1D *hTestB = new TH1D("testB", "testB", 200, 0, 1000);
 
+TH1D *hTest1S = new TH1D("test1S", "test1S", 11, -0.5, 10.5);					TH1D *hTest1B = new TH1D("test1B", "test1B", 11, -0.5, 10.5);
+TH1D *hTest2S = new TH1D("test2S", "test2S", 11, -0.5, 10.5);					TH1D *hTest2B = new TH1D("test2B", "test2B", 11, -0.5, 10.5);
+TH1D *hTest3S = new TH1D("test3S", "test3S", 11, -0.5, 10.5);					TH1D *hTest3B = new TH1D("test3B", "test3B", 11, -0.5, 10.5);
+TH1D *hTest4S = new TH1D("test4S", "test4S", 250, 0, 600);						TH1D *hTest4B = new TH1D("test4B", "test4B", 250, 0, 600);
+TH1D *hTest5S = new TH1D("test5S", "test5S", 21, -0.5, 20.5);					TH1D *hTest5B = new TH1D("test5B", "test5B", 21, -0.5, 20.5);
+
 // Initialyze storage variables
 Double_t totalSignal=0, selectionSignal = 0, dijetCutSignal = 0, injetCutSignal = 0, higgsCutSignal=0, dRbCutSignal=0, dRjCutSignal=0;
 Double_t totalBackground=0, selectionBackground = 0, dijetCutBackground = 0, injetCutBackground = 0, higgsCutBackground=0, dRbCutBackground=0, dRjCutBackground=0;
@@ -85,7 +91,7 @@ Double_t ErrorselectionBackground = 0, ErrordijetCutBackground = 0, ErrorinjetCu
  * MAIN FUNCTION
  */
 
-void vbf_bbbb(TString backgroundSample){
+void vbf_bbbb(TString backgroundSample = "all"){
 	
 	BackgroundSample = backgroundSample;
 	
@@ -298,7 +304,7 @@ void analyze(TString inputfile, Double_t crossSection, bool SorB)
 {	
 	// The SorB variable is true if it's signal and false if it's a background
 	
-	const TString inputFile = "/afs/cern.ch/work/a/ariostas/public/vbf-bbbb/" + inputfile + ".root";
+	const TString inputFile = "/afs/cern.ch/work/a/ariostas/private/vbf-bbbb/" + inputfile + ".root";
 	
 	cout << "Reading from " << inputfile << endl;
 
@@ -307,6 +313,8 @@ void analyze(TString inputfile, Double_t crossSection, bool SorB)
 	LHEFEvent *event;
 	Double_t weight;
 	TLorentzVector vbJet1, vbJet2, vbJet3, vbJet4, vJet1, vJet2, vdiJet, v4bJet, v2bJetNoCross, v2bJetCross, vbJet01, vbJet02, vbJet03, vbJet04;
+	Int_t nPhotons=0, nLeptons=0, nJets=0, nJetsHighPt=0;
+	Double_t corrb1=0, corrb2=0, corrb3=0, corrb4=0, corrj1=0, corrj2=0;
 
 	TFile* infile = new TFile(inputFile); assert(infile);
 	TTree* intree = (TTree*) infile->Get("Events"); assert(intree);
@@ -318,6 +326,16 @@ void analyze(TString inputfile, Double_t crossSection, bool SorB)
 	intree->SetBranchAddress("bJet4",		&bJet4);
 	intree->SetBranchAddress("Jet1",     &Jet1);
 	intree->SetBranchAddress("Jet2",     &Jet2);
+	intree->SetBranchAddress("nPhotons",     &nPhotons);
+	intree->SetBranchAddress("nLeptons",     &nLeptons);
+	intree->SetBranchAddress("nJets",     &nJets);
+	intree->SetBranchAddress("nJetsHighPt",     &nJetsHighPt);
+	intree->SetBranchAddress("corrb1",     &corrb1);
+	intree->SetBranchAddress("corrb2",     &corrb2);
+	intree->SetBranchAddress("corrb3",     &corrb3);
+	intree->SetBranchAddress("corrb4",     &corrb4);
+	intree->SetBranchAddress("corrj1",     &corrj1);
+	intree->SetBranchAddress("corrj2",     &corrj2);
 
 	// Set up temporal variables
 	Double_t tempSelection=0, tempDijetCut=0, tempInjetCut=0, tempHiggsCut=0, tempDRbCut=0, tempDRjCut=0;
@@ -325,13 +343,21 @@ void analyze(TString inputfile, Double_t crossSection, bool SorB)
 
 	for (Long64_t iEntry=0; iEntry<intree->GetEntries(); iEntry++) { // Event loop
 		intree->GetEntry(iEntry);
+		
+		
+		(SorB ? hTest2S : hTest2B)->Fill(nPhotons, weight);
+		(SorB ? hTest3S : hTest3B)->Fill(nJets, weight);
+		(SorB ? hTest5S : hTest5B)->Fill(nLeptons, weight);
+		
+		if(nLeptons != 0) continue;
+		if(nJets != 6) continue;
 			
 		tempSelection += weight;
 		tempErrorSelection++;
 			
 		// Set up four-vectors for light jets
-		vJet1.SetPtEtaPhiM(Jet1->PT, Jet1->Eta, Jet1->Phi, Jet1->Mass);
-		vJet2.SetPtEtaPhiM(Jet2->PT, Jet2->Eta, Jet2->Phi, Jet2->Mass);
+		vJet1.SetPtEtaPhiM(corrj1*Jet1->PT, Jet1->Eta, Jet1->Phi, corrj1*Jet1->Mass);
+		vJet2.SetPtEtaPhiM(corrj2*Jet2->PT, Jet2->Eta, Jet2->Phi, corrj2*Jet2->Mass);
 		
 		vdiJet = vJet1 + vJet2;
 		
@@ -344,10 +370,10 @@ void analyze(TString inputfile, Double_t crossSection, bool SorB)
 		tempDijetCut += weight;
 		tempErrorDijetCut++;
 		
-		vbJet1.SetPtEtaPhiM(bJet1->PT, bJet1->Eta, bJet1->Phi, bJet1->Mass);
-		vbJet2.SetPtEtaPhiM(bJet2->PT, bJet2->Eta, bJet2->Phi, bJet2->Mass);
-		vbJet3.SetPtEtaPhiM(bJet3->PT, bJet3->Eta, bJet3->Phi, bJet3->Mass);
-		vbJet4.SetPtEtaPhiM(bJet4->PT, bJet4->Eta, bJet4->Phi, bJet4->Mass);
+		vbJet1.SetPtEtaPhiM(corrb1*bJet1->PT, bJet1->Eta, bJet1->Phi, corrb1*bJet1->Mass);
+		vbJet2.SetPtEtaPhiM(corrb2*bJet2->PT, bJet2->Eta, bJet2->Phi, corrb2*bJet2->Mass);
+		vbJet3.SetPtEtaPhiM(corrb3*bJet3->PT, bJet3->Eta, bJet3->Phi, corrb3*bJet3->Mass);
+		vbJet4.SetPtEtaPhiM(corrb4*bJet4->PT, bJet4->Eta, bJet4->Phi, corrb4*bJet4->Mass);
 	
 		v4bJet = vbJet1 + vbJet2 + vbJet3 + vbJet4;
 		
@@ -387,11 +413,13 @@ void analyze(TString inputfile, Double_t crossSection, bool SorB)
 		
 		Int_t nHiggs=0;
 		
-		if((test11.M() > 110) && (test11.M() < 140) && (test12.M() > 110) && (test12.M() < 140)) nHiggs++; 
-		if((test21.M() > 110) && (test21.M() < 140) && (test22.M() > 110) && (test22.M() < 140)) nHiggs++;
-		if((test31.M() > 110) && (test31.M() < 140) && (test32.M() > 110) && (test32.M() < 140)) nHiggs++;
+		if((test11.M() > 75) && (test11.M() < 175) && (test12.M() > 75) && (test12.M() < 175)) nHiggs++; 
+		if((test21.M() > 75) && (test21.M() < 175) && (test22.M() > 75) && (test22.M() < 175)) nHiggs++;
+		if((test31.M() > 75) && (test31.M() < 175) && (test32.M() > 75) && (test32.M() < 175)) nHiggs++;
+		
+		(SorB ? hTest1S : hTest1B)->Fill(nHiggs, weight);
 			
-		//Check if at least one combination of pairs of bjets yield a reconstructed mass in the range 110-140
+		//Check if at least one combination of pairs of bjets yield a reconstructed mass in the range 75-175
 		if(!(nHiggs>0)) continue;
 			
 		tempHiggsCut += weight;
@@ -461,12 +489,17 @@ void saveResults(){
 	gStyle->SetOptStat(kFALSE);
 
 
-	histogram(hdRJJS, hdRJJB, c1, "minimum deltaR between bjets", "Count", "./Histograms/histogramdRbb_" + BackgroundSample + ".jpg");
+	/*histogram(hdRJJS, hdRJJB, c1, "minimum deltaR between bjets", "Count", "./Histograms/histogramdRbb_" + BackgroundSample + ".jpg");
 	histogram(hdRBJS, hdRBJB, c1, "deltaR betwenn light jets", "Count", "./Histograms/histogramdRjj_" + BackgroundSample + ".jpg");
 	histogram(hdES, hdEB, c1, "|d_eta| between light jets", "Count", "./Histograms/histogramdEJ_" + BackgroundSample + ".jpg");
 	histogram(hMassdiJetS, hMassdiJetB, c1, "Mass diJet system", "Count", "./Histograms/histogramMassdiJets_" + BackgroundSample + ".jpg");
 	histogram(hInJetsS, hInJetsB, c1, "Number of bjets between light jets", "Count", "./Histograms/histogramInBJets_" + BackgroundSample + ".jpg");
 	
+	histogram(hTest1S, hTest1B, c1, "Number of combinations with both M_bb in the range 75-175", "Count", "./Histograms/histogramTest1_" + BackgroundSample + ".jpg");
+	*/histogram(hTest2S, hTest2B, c1, "Number of photons", "Count", "./Histograms/histogramTest2_" + BackgroundSample + ".jpg");/*
+	histogram(hTest3S, hTest3B, c1, "Number of non-pileup jets", "Count", "./Histograms/histogramTest3_" + BackgroundSample + ".jpg");
+	histogram(hTest5S, hTest5B, c1, "Number of leptons", "Count", "./Histograms/histogramTest5_" + BackgroundSample + ".jpg");
+	*/
 	// Print event yields
 	cout << "\nSignal" << endl << endl;
 	cout << "Total events: " << totalSignal << endl;

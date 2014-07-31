@@ -4,7 +4,7 @@
 // execute with:
 // root -l -q cleanUpMergedFiles(_infile_, _outfile_)
 //
-// Code based on Jay Lawhorn 11/4/13
+// Jay Lawhorn 11/4/13
 //-------------------------------------------------------------------
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TROOT.h>
@@ -35,6 +35,8 @@ void cleanUpMergedFiles(TString infilename="/afs/cern.ch/work/k/klawhorn/Snowmas
   // set up input/output variables and file
   UInt_t nEvents;
   Double_t weight;
+  Int_t nLeptons=0, nJets=0, nJetsHighPt=0;
+  Double_t corrb1=0, corrb2=0, corrb3=0, corrb4=0, corrj1=0, corrj2=0;
   
   Jet *bJet1=0, *bJet2=0, *bJet3=0, *bJet4=0, *Jet1=0, *Jet2=0;
 
@@ -48,6 +50,15 @@ void cleanUpMergedFiles(TString infilename="/afs/cern.ch/work/k/klawhorn/Snowmas
   intree->SetBranchAddress("bJet4",		&bJet4);
   intree->SetBranchAddress("Jet1",     &Jet1);
   intree->SetBranchAddress("Jet2",     &Jet2);
+  intree->SetBranchAddress("nLeptons",     &nLeptons);
+  intree->SetBranchAddress("nJets",     &nJets);
+  intree->SetBranchAddress("nJetsHighPt",     &nJetsHighPt);
+  intree->SetBranchAddress("corrb1",     &corrb1);
+  intree->SetBranchAddress("corrb2",     &corrb2);
+  intree->SetBranchAddress("corrb3",     &corrb3);
+  intree->SetBranchAddress("corrb4",     &corrb4);
+  intree->SetBranchAddress("corrj1",     &corrj1);
+  intree->SetBranchAddress("corrj2",     &corrj2);
 
   TTree* infotree = (TTree*) infile->Get("Info"); assert(infotree);
   infotree->SetBranchAddress("nEvents",      &nEvents);
@@ -70,6 +81,15 @@ void cleanUpMergedFiles(TString infilename="/afs/cern.ch/work/k/klawhorn/Snowmas
 	outTree->Branch("bJet4",   		"Jet", &bJet4); // 4-vector for second jet
 	outTree->Branch("Jet1",   		"Jet", &Jet1); // 4-vector for second jet
 	outTree->Branch("Jet2",   		"Jet", &Jet2); // 4-vector for second jet 
+	outTree->Branch("nLeptons",		&nLeptons,    "nLeptons/I");  // number of jets
+	outTree->Branch("nJets",		&nJets,    "nJets/I");  // number of jets
+	outTree->Branch("nJetsHighPt",	&nJetsHighPt,    "nJetsHighPt/I");  // number of jets
+	outTree->Branch("corrb1",		&corrb1,    "corrb1/D");  // number of jets
+	outTree->Branch("corrb2",		&corrb2,    "corrb2/D");  // number of jets
+	outTree->Branch("corrb3",		&corrb3,    "corrb3/D");  // number of jets
+	outTree->Branch("corrb4",		&corrb4,    "corrb4/D");  // number of jets
+	outTree->Branch("corrj1",		&corrj1,    "corrj1/D");  // number of jets
+	outTree->Branch("corrj2",		&corrj2,    "corrj2/D");  // number of jets
 
   for(UInt_t iEntry=0; iEntry<intree->GetEntries(); iEntry++) { // entry loop
     intree->GetEntry(iEntry);

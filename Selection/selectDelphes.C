@@ -1,9 +1,5 @@
 //-------------------------------------------------------------------
-// Select vbf-bbbb events from delphes
-//
-// Run with:
-// root -l -q selectDelphes.C+\(\"_inputfile_name_\",_file_cross_section_\)
-//
+// Select vbf-bbbb events
 //-------------------------------------------------------------------
 
 #if !defined(__CINT__) || defined(__MAKECINT__)
@@ -22,73 +18,68 @@
 #include <iomanip>
 #include <fstream>
 #include "Math/LorentzVector.h"
-#include "JEC/JECHelper/interface/jcorr.h"
 
-#include "modules/Delphes.h"                   // delphes
-#include "ExRootAnalysis/ExRootTreeReader.h"   // delphes
-#include "classes/DelphesClasses.h"            // delphes
+#include "../Delphes/modules/Delphes.h"                   // delphes
+#include "../Delphes/external/ExRootAnalysis/ExRootTreeReader.h"   // delphes
+#include "../Delphes/classes/DelphesClasses.h"            // delphes
 
 #endif
 
+using namespace std;
+
 int puJetID( Float_t eta, Float_t meanSqDeltaR, Float_t betastar);
-double doJetcorr(mithep::jcorr *corrector,Jet* ijet,double rho_2,double rho_1,double rho_0);
+Double_t deltaR( const Float_t eta1, const Float_t eta2, const Float_t phi1, const Float_t phi2 );
 
 void selectDelphes(const TString inputfile="root://eoscms.cern.ch//store/group/phys_higgs/upgrade/PhaseII/Configuration4v2/140PileUp/HHToGGBB_14TeV/HHToGGBB_14TeV_0.root",
-const Double_t xsec=1341.36923) {
+const Double_t xsec=1341.36923, Int_t signalFlag=1) {
 	
-	mithep::jcorr *corrector = new mithep::jcorr;
-	char *PATH = getenv("CMSSW_BASE"); assert(PATH);
-	TString path(TString::Format("%s/src/JEC/JECHelper/data/JetCorrections_phase2/", PATH));
-	corrector->AddJetCorr(path+"Delphes_V1_MC_L1FastJet_AK4PF.txt");
-	corrector->AddJetCorr(path+"Delphes_V1_MC_L2Relative_AK4PF.txt");
-	corrector->AddJetCorr(path+"Delphes_V1_MC_L3Absolute_AK4PFl1.txt");
-	corrector->setup();
-
-	const TString inputFile = inputfile + ".txt";
-	ifstream ifs(inputFile);
-
-	assert(ifs.is_open());
-	
-	TString filename;
-	
-	cout << "Reading " << inputfile << endl;
-
-	while(ifs >> filename){
-
+	TString inputFile = inputfile;
+	if(signalFlag == 1) inputFile.Remove(0,15);
 
 	// read input input file
 	TChain chain("Delphes");
-	chain.Add("root://eoscms.cern.ch/" + (inputfile == "HHToBBBB_14TeV" ? "/store/user/arapyan/Delphes_phase2/VBFHHTobbbb_TuneZ2_14TeV-madgraph_june9/files/" : "/store/group/upgrade/delphes/ProdJun14/" + inputfile  + "/") + filename);
+	chain.Add("root://eoscms.cern.ch/" + (signalFlag == 1 ? "/store/group/upgrade/dihiggs_signal_4b/VBFHHTobbbb_TuneZ2_14TeV-madgraph/files/" /*"/store/group/upgrade/delphes/dihiggs_signal_bbbb/gFHHTobbbb_TuneZ2_14TeV_madgraph/files/"*/  + inputFile: "/store/group/upgrade/delphes/PhaseII_140PU_ProdJul28/" + inputFile));
 	ExRootTreeReader *treeReader = new ExRootTreeReader(&chain);
 	Long64_t numberOfEntries = treeReader->GetEntries();
 
 	// set up branches to read in from file
+	TClonesArray *branchEvent;
+	if(signalFlag == 0) branchEvent = treeReader->UseBranch("Event");
 	TClonesArray *branchMuon = treeReader->UseBranch("Muon");
 	TClonesArray *branchElectron = treeReader->UseBranch("Electron");
-	TClonesArray *branchRho = treeReader->UseBranch("Rho");
-	TClonesArray *branchJet = treeReader->UseBranch("RawJet");
+	TClonesArray *branchPhoton = treeReader->UseBranch("Photon");
+	TClonesArray *branchJet = treeReader->UseBranch("Jet");
 	
-	TString tempString = "Reading " + filename + " ...";
-	tempString.Resize(50);
+	TString tempString = "Reading " + inputfile + "...";
+	tempString.Resize(75);
 	cout << tempString;
 	
 	if (!(branchJet)) {
-		cout << "File broken" << endl;
-		continue;
+		cout << " file broken" << endl;
+		return;
 	}
 
 	// set up loop variables
 	Jet *jet;
+	Electron *electron;
+	Photon *photon;
+	Muon *muon;
 
 	// set up storage variables
 	Jet *bJet1=0, *bJet2=0, *bJet3=0, *bJet4=0, *Jet1=0, *Jet2=0;
 	Int_t nbJet1, nbJet2, nbJet3, nbJet4, nJet1, nJet2;
 	Double_t weight=3000000*xsec;
 	UInt_t nEvents=0;
-	Int_t nLeptons=0, nJets=0, nJetsHighPt=0;
-	Double_t corrb1=0, corrb2=0, corrb3=0, corrb4=0, corrj1=0, corrj2=0;
+	Int_t nLeptons=0, nLeptons01=0, nLeptons04=0, nJets=0, nJetsHighPt=0, nCentralLightJets=0, nCentralLightJetsPU=0;
+	
+	Double_t bjet1_Pt, bjet1_Eta, bjet1_Phi, bjet1_Mass;
+	Double_t bjet2_Pt, bjet2_Eta, bjet2_Phi, bjet2_Mass;
+	Double_t bjet3_Pt, bjet3_Eta, bjet3_Phi, bjet3_Mass;
+	Double_t bjet4_Pt, bjet4_Eta, bjet4_Phi, bjet4_Mass;
+	Double_t jet1_Pt, jet1_Eta, jet1_Phi, jet1_Mass;
+	Double_t jet2_Pt, jet2_Eta, jet2_Phi, jet2_Mass;
 
-	const TString outfile = "/afs/cern.ch/work/a/ariostas/private/vbf-bbbb_temp/" + inputfile + "/" + filename;
+	const TString outfile = "/afs/cern.ch/work/a/ariostas/private/vbf-bbbb_temp/" + inputfile;
 
 	TFile *outFile = new TFile(outfile, "RECREATE");
 
@@ -100,167 +91,236 @@ const Double_t xsec=1341.36923) {
 
 	// tree to hold information about selected events
 	TTree *outTree = new TTree("Events", "Events");
-	outTree->Branch("weight",		&weight,    "weight/D");  // number of jets
-	outTree->Branch("bJet1",   		"Jet", &bJet1); // 4-vector for leading jet
-	outTree->Branch("bJet2",   		"Jet", &bJet2); // 4-vector for second jet
-	outTree->Branch("bJet3",   		"Jet", &bJet3); // 4-vector for second jet
-	outTree->Branch("bJet4",   		"Jet", &bJet4); // 4-vector for second jet
-	outTree->Branch("Jet1",   		"Jet", &Jet1); // 4-vector for second jet
-	outTree->Branch("Jet2",   		"Jet", &Jet2); // 4-vector for second jet
-	outTree->Branch("nLeptons",		&nLeptons,    "nLeptons/I");  // number of jets
-	outTree->Branch("nJets",		&nJets,    "nJets/I");  // number of jets
-	outTree->Branch("nJetsHighPt",	&nJetsHighPt,    "nJetsHighPt/I");  // number of jets
-	outTree->Branch("corrb1",		&corrb1,    "corrb1/D");  // number of jets
-	outTree->Branch("corrb2",		&corrb2,    "corrb2/D");  // number of jets
-	outTree->Branch("corrb3",		&corrb3,    "corrb3/D");  // number of jets
-	outTree->Branch("corrb4",		&corrb4,    "corrb4/D");  // number of jets
-	outTree->Branch("corrj1",		&corrj1,    "corrj1/D");  // number of jets
-	outTree->Branch("corrj2",		&corrj2,    "corrj2/D");  // number of jets
+	outTree->Branch("weight",		&weight,    	"weight/D");
+	outTree->Branch("bjet1_Pt",		&bjet1_Pt,  	"bjet1_Pt/D");
+	outTree->Branch("bjet1_Eta",	&bjet1_Eta,  	"bjet1_Eta/D");
+	outTree->Branch("bjet1_Phi",	&bjet1_Phi,  	"bjet1_Phi/D");
+	outTree->Branch("bjet1_Mass",	&bjet1_Mass,  	"bjet1_Mass/D");
+	outTree->Branch("bjet2_Pt",		&bjet2_Pt,  	"bjet2_Pt/D");
+	outTree->Branch("bjet2_Eta",	&bjet2_Eta,  	"bjet2_Eta/D");
+	outTree->Branch("bjet2_Phi",	&bjet2_Phi,  	"bjet2_Phi/D");
+	outTree->Branch("bjet2_Mass",	&bjet2_Mass,  	"bjet2_Mass/D");
+	outTree->Branch("bjet3_Pt",		&bjet3_Pt,  	"bjet3_Pt/D");
+	outTree->Branch("bjet3_Eta",	&bjet3_Eta,  	"bjet3_Eta/D");
+	outTree->Branch("bjet3_Phi",	&bjet3_Phi,  	"bjet3_Phi/D");
+	outTree->Branch("bjet3_Mass",	&bjet3_Mass,  	"bjet3_Mass/D");
+	outTree->Branch("bjet4_Pt",		&bjet4_Pt,  	"bjet4_Pt/D");
+	outTree->Branch("bjet4_Eta",	&bjet4_Eta,  	"bjet4_Eta/D");
+	outTree->Branch("bjet4_Phi",	&bjet4_Phi,  	"bjet4_Phi/D");
+	outTree->Branch("bjet4_Mass",	&bjet4_Mass,  	"bjet4_Mass/D");
+	outTree->Branch("jet1_Pt",		&jet1_Pt,  		"jet1_Pt/D");
+	outTree->Branch("jet1_Eta",		&jet1_Eta,  	"jet1_Eta/D");
+	outTree->Branch("jet1_Phi",		&jet1_Phi,  	"jet1_Phi/D");
+	outTree->Branch("jet1_Mass",	&jet1_Mass,  	"jet1_Mass/D");
+	outTree->Branch("jet2_Pt",		&jet2_Pt,  		"jet2_Pt/D");
+	outTree->Branch("jet2_Eta",		&jet2_Eta,  	"jet2_Eta/D");
+	outTree->Branch("jet2_Phi",		&jet2_Phi,  	"jet2_Phi/D");
+	outTree->Branch("jet2_Mass",	&jet2_Mass,  	"jet2_Mass/D");
+	outTree->Branch("nLeptons",		&nLeptons,    	"nLeptons/I");
+	outTree->Branch("nLeptons01",	&nLeptons01,   	"nLeptons01/I");
+	outTree->Branch("nLeptons04",	&nLeptons04,   	"nLeptons04/I");
+	outTree->Branch("nJets",		&nJets,    		"nJets/I");
+	outTree->Branch("nJetsHighPt",	&nJetsHighPt,  	"nJetsHighPt/I");
+	outTree->Branch("nCentralLightJets",	&nCentralLightJets,  	"nCentralLightJets/I");
+	outTree->Branch("nCentralLightJetsPU",	&nCentralLightJetsPU,  	"nCentralLightJetsPU/I");
 
 
 	for (Int_t iEntry=0; iEntry<numberOfEntries; iEntry++) { // entry loop
 		treeReader->ReadEntry(iEntry);
 
-		// Reset index variables
+		// Reset index and storage variables
 		nbJet1=nbJet2=nbJet3=nbJet4=nJet1=nJet2=-1;
-		nLeptons=nJets=nJetsHighPt=corrb1=corrb2=corrb3=corrb4=corrj1=corrj2=0;
+		nLeptons=nLeptons01=nLeptons04=nJets=nJetsHighPt=nCentralLightJets=nCentralLightJetsPU=0;
+		
+		weight=3000000*xsec;
+		if(signalFlag == 0) weight *= ((LHEFEvent*) branchEvent->At(0))->Weight;
 		
 		// Select bjets and light jets
 		for (Int_t iJet=0; iJet<branchJet->GetEntries(); iJet++) { // Jet loop
 			jet = (Jet*) branchJet->At(iJet);
-
-			double corr = doJetcorr(corrector,jet,((Rho*) branchRho->At(2))->Rho,((Rho*) branchRho->At(1))->Rho,((Rho*) branchRho->At(0))->Rho);
 			
-			if ((puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar) == 0) && (corr*jet->PT > 30) && (fabs(jet->Eta) < 5)){
-				
-				nJets++;
-				
-				if(corr*jet->PT > 40) nJetsHighPt++;
+			if(jet->PT <= 30) continue;
 			
-				if(jet->BTag){
-					if(nbJet1 == -1){
-						corrb1 = corr;
-						nbJet1 = iJet;
-						bJet1 = (Jet*) branchJet->At(nbJet1);
-					}
-					else if(corr*jet->PT > corrb1*bJet1->PT){
-						
-						corrb4 = corrb3;
-						nbJet4 = nbJet3;
-						bJet4 = (Jet*) branchJet->At(nbJet4);
-						
-						corrb3 = corrb2;
-						nbJet3 = nbJet2;
-						bJet3 = (Jet*) branchJet->At(nbJet3);
-						
-						corrb2 = corrb1;
-						nbJet2 = nbJet1;
-						bJet2 = (Jet*) branchJet->At(nbJet2);
-						
-						corrb1 = corr;
-						nbJet1 = iJet;
-						bJet1 = (Jet*) branchJet->At(nbJet1);
-						
-					}
-					else if(nbJet2 == -1){
-						
-						corrb2 = corr;
-						nbJet2 = iJet;
-						bJet2 = (Jet*) branchJet->At(nbJet2);
+			bool count = true;
 					
-					}
-					else if(corr*jet->PT > corrb2*bJet2->PT){
-						
-						corrb4 = corrb3;
-						nbJet4 = nbJet3;
-						bJet4 = (Jet*) branchJet->At(nbJet4);
-						
-						corrb3 = corrb2;
-						nbJet3 = nbJet2;
-						bJet3 = (Jet*) branchJet->At(nbJet3);
-						
-						corrb2 = corr;
-						nbJet2 = iJet;
-						bJet2 = (Jet*) branchJet->At(nbJet2);
-					
-					}
-					else if(nbJet3 == -1){
-						
-						corrb3 = corr;
-						nbJet3 = iJet;
-						bJet3 = (Jet*) branchJet->At(nbJet3);
-					
-					}
-					else if(corr*jet->PT > corrb3*bJet3->PT){
-						
-						corrb4 = corrb3;
-						nbJet4 = nbJet3;
-						bJet4 = (Jet*) branchJet->At(nbJet4);
-						
-						corrb3 = corr;
-						nbJet3 = iJet;
-						bJet3 = (Jet*) branchJet->At(nbJet3);
-					
-					}
-					else if(nbJet4 == -1){
-						
-						corrb4 = corr;
-						nbJet4 = iJet;
-						bJet4 = (Jet*) branchJet->At(nbJet4);
-					
-					}
-					else if(corr*jet->PT > corrb4*bJet4->PT){
-						
-						corrb4 = corr;
-						nbJet4 = iJet;
-						bJet4 = (Jet*) branchJet->At(nbJet4);
-					
-					}
-				}
-				else{
-					if(nJet1 == -1){
-						
-						corrj1 = corr;
-						nJet1 = iJet;
-						Jet1 = (Jet*) branchJet->At(nJet1);
-					
-					}
-					else if(corr*jet->PT > corrj1*Jet1->PT){
-						
-						corrj2 = corrj1;
-						nJet2 = nJet1;
-						Jet2 = (Jet*) branchJet->At(nJet2);
-						
-						corrj1 = corr;
-						nJet1 = iJet;
-						Jet1 = (Jet*) branchJet->At(nJet1);
-					
-						}
-					else if(nJet2 == -1){
-						
-						corrj2 = corr;
-						nJet2 = iJet;
-						Jet2 = (Jet*) branchJet->At(nJet2);
-					
-					}
-					else if(corr*jet->PT > corrj2*Jet2->PT){
-						
-						corrj2 = corr;
-						nJet2 = iJet;
-						Jet2 = (Jet*) branchJet->At(nJet2);
-					
-					}
-				
-				}
-				
+			for (Int_t iP=0; iP<branchElectron->GetEntries(); iP++) {
+				electron = (Electron*) branchElectron->At(iP);
+				if(electron->PT > 10 && electron->IsolationVar < 0.4 && deltaR(electron->Eta, jet->Eta, electron->Phi, jet->Phi) < 0.4) count = false;
+			}
+			for (Int_t iP=0; iP<branchMuon->GetEntries(); iP++) {
+				muon = (Muon*) branchMuon->At(iP);
+				if(muon->PT > 10 && muon->IsolationVar < 0.4 && deltaR(muon->Eta, jet->Eta, muon->Phi, jet->Phi) < 0.4) count = false;
+			}
+			for (Int_t iP=0; iP<branchPhoton->GetEntries(); iP++) {
+				photon = (Photon*) branchPhoton->At(iP);
+				if(photon->PT > 10 && photon->IsolationVar < 0.4 && deltaR(photon->Eta, jet->Eta, photon->Phi, jet->Phi) < 0.4) count = false;
 			}
 			
+			//Ignore jets near isolated objects
+			if(!count) continue;
+			
+			if((jet->PT > 30) && (fabs(jet->Eta) < 1.0) && !(jet->BTag == 2 || jet->BTag == 3 || jet->BTag == 6 || jet->BTag == 7)) nCentralLightJets++;
+
+			if ((puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar) == 0) && (jet->PT > 30) && (fabs(jet->Eta) < 4.0)){
+				
+				nJets++;
+				if((fabs(jet->Eta) < 1.0) && !(jet->BTag == 2 || jet->BTag == 3 || jet->BTag == 6 || jet->BTag == 7)) nCentralLightJetsPU++;
+				if(jet->PT > 40) nJetsHighPt++;
+
+				if((jet->BTag == 2 || jet->BTag == 3 || jet->BTag == 6 || jet->BTag == 7) && (fabs(jet->Eta) < 2.5)){
+					
+					if(nbJet1 == -1){
+						
+						nbJet1 = iJet;
+						bJet1 = (Jet*) branchJet->At(nbJet1);
+						
+					}
+					else if(jet->PT > bJet1->PT){
+
+						nbJet4 = nbJet3;
+						bJet4 = (Jet*) branchJet->At(nbJet4);
+
+						nbJet3 = nbJet2;
+						bJet3 = (Jet*) branchJet->At(nbJet3);
+
+						nbJet2 = nbJet1;
+						bJet2 = (Jet*) branchJet->At(nbJet2);
+
+						nbJet1 = iJet;
+						bJet1 = (Jet*) branchJet->At(nbJet1);
+
+					}
+					else if(nbJet2 == -1){
+
+						nbJet2 = iJet;
+						bJet2 = (Jet*) branchJet->At(nbJet2);
+
+					}
+					else if(jet->PT > bJet2->PT){
+
+						nbJet4 = nbJet3;
+						bJet4 = (Jet*) branchJet->At(nbJet4);
+
+						nbJet3 = nbJet2;
+						bJet3 = (Jet*) branchJet->At(nbJet3);
+
+						nbJet2 = iJet;
+						bJet2 = (Jet*) branchJet->At(nbJet2);
+
+					}
+					else if(nbJet3 == -1){
+
+					nbJet3 = iJet;
+					bJet3 = (Jet*) branchJet->At(nbJet3);
+
+					}
+					else if(jet->PT > bJet3->PT){
+
+						nbJet4 = nbJet3;
+						bJet4 = (Jet*) branchJet->At(nbJet4);
+
+						nbJet3 = iJet;
+						bJet3 = (Jet*) branchJet->At(nbJet3);
+
+					}
+					else if(nbJet4 == -1){
+
+						nbJet4 = iJet;
+						bJet4 = (Jet*) branchJet->At(nbJet4);
+
+					}
+					else if(jet->PT > bJet4->PT){
+
+						nbJet4 = iJet;
+						bJet4 = (Jet*) branchJet->At(nbJet4);
+
+					}
+				}
+				else if(!(jet->BTag == 2 || jet->BTag == 3 || jet->BTag == 6 || jet->BTag == 7)){
+					if(nJet1 == -1){
+
+						nJet1 = iJet;
+						Jet1 = (Jet*) branchJet->At(nJet1);
+
+					}
+					else if((jet->PT > Jet1->PT)){
+
+						nJet2 = nJet1;
+						Jet2 = (Jet*) branchJet->At(nJet2);
+
+						nJet1 = iJet;
+						Jet1 = (Jet*) branchJet->At(nJet1);
+
+					}
+					else if(nJet2 == -1){
+
+						nJet2 = iJet;
+						Jet2 = (Jet*) branchJet->At(nJet2);
+
+					}
+					else if(jet->PT > Jet2->PT){
+
+						nJet2 = iJet;
+						Jet2 = (Jet*) branchJet->At(nJet2);
+
+					}
+
+				}
+
+			}
+
 		} // End jet loop
 		
-		nLeptons = branchElectron->GetEntries() + branchMuon->GetEntries();
-		
 		// Check if there are four bjets and two light jets
-		if((nJet1!=-1) && (nJet2!=-1) && (nbJet1!=-1) && (nbJet2!=-1) && (nbJet3!=-1) && (nbJet4!=-1)) outTree->Fill();
+		if((nJet1!=-1) && (nJet2!=-1) && (nbJet1!=-1) && (nbJet2!=-1) && (nbJet3!=-1) && (nbJet4!=-1)){
+			
+			nLeptons = branchElectron->GetEntries() + branchMuon->GetEntries();
+			
+			for (Int_t iElectron=0; iElectron<branchElectron->GetEntries(); iElectron++) { 
+				electron = (Electron*) branchElectron->At(iElectron);
+				if(electron->IsolationVar < 0.1 && electron->PT > 10) nLeptons01++;
+				if(electron->IsolationVar < 0.4 && electron->PT > 10) nLeptons04++;
+			}
+			
+			for (Int_t iMuon=0; iMuon<branchMuon->GetEntries(); iMuon++) { 
+				muon = (Muon*) branchMuon->At(iMuon);
+				if(muon->IsolationVar < 0.1 && muon->PT > 10) nLeptons01++;
+				if(muon->IsolationVar < 0.4 && muon->PT > 10) nLeptons04++;
+			}
+			
+			bjet1_Pt = bJet1->PT;
+			bjet1_Eta = bJet1->Eta;
+			bjet1_Phi = bJet1->Phi;
+			bjet1_Mass = bJet1->Mass;
+			
+			bjet2_Pt = bJet2->PT;
+			bjet2_Eta = bJet2->Eta;
+			bjet2_Phi = bJet2->Phi;
+			bjet2_Mass = bJet2->Mass;
+			
+			bjet3_Pt = bJet3->PT;
+			bjet3_Eta = bJet3->Eta;
+			bjet3_Phi = bJet3->Phi;
+			bjet3_Mass = bJet3->Mass;
+			
+			bjet4_Pt = bJet4->PT;
+			bjet4_Eta = bJet4->Eta;
+			bjet4_Phi = bJet4->Phi;
+			bjet4_Mass = bJet4->Mass;
+			
+			jet1_Pt = Jet1->PT;
+			jet1_Eta = Jet1->Eta;
+			jet1_Phi = Jet1->Phi;
+			jet1_Mass = Jet1->Mass;
+			
+			jet2_Pt = Jet2->PT;
+			jet2_Eta = Jet2->Eta;
+			jet2_Phi = Jet2->Phi;
+			jet2_Mass = Jet2->Mass;
+			
+			outTree->Fill();
+			
+		}
 
 	} // end event loop
 
@@ -269,9 +329,9 @@ const Double_t xsec=1341.36923) {
 	// close file
 	outFile->Close();
 
-	cout << "selection done." << endl;
+	cout << "  selection done." << endl;
 
-	}
+	
 
 }
 
@@ -310,17 +370,16 @@ int puJetID( Float_t eta, Float_t meanSqDeltaR, Float_t betastar) {
 
 }
 
+Double_t deltaR( const Float_t eta1, const Float_t eta2, const Float_t phi1, const Float_t phi2 ) {
 
-double doJetcorr(mithep::jcorr *corrector,Jet* ijet,double rho_2,double rho_1,double rho_0)
-{
-  double area = TMath::Sqrt(ijet->AreaX*ijet->AreaX+ijet->AreaY*ijet->AreaY);
-  //std::cout << "Area pT " << area << std::endl;
-  double rrho=0;
-  if(fabs(ijet->Eta)>4.0) rrho=rho_2;
-  else if(fabs(ijet->Eta)>2.5) rrho=rho_1;
-  else rrho=rho_0;
-  double corr = corrector->getCorrection(ijet->PT,ijet->Eta,rrho,area);
-  //std::cout << ijet->PT << " " << corr << std::endl;
-  //return 1.0;
-  return corr;
+  const Float_t pi = 3.14159265358979;
+
+  Float_t etaDiff = (eta1-eta2);
+  Float_t phiDiff = fabs(phi1-phi2);
+  while ( phiDiff>pi ) phiDiff = fabs(phiDiff-2.0*pi);
+
+  Float_t deltaRSquared = etaDiff*etaDiff + phiDiff*phiDiff;
+
+  return TMath::Sqrt(deltaRSquared);
+
 }

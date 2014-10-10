@@ -1,7 +1,3 @@
-//-------------------------------------------------------------------
-// Select vbf-bbbb events
-//-------------------------------------------------------------------
-
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TROOT.h>
 #include <TSystem.h>
@@ -27,11 +23,10 @@
 
 using namespace std;
 
-int puJetID( Float_t eta, Float_t meanSqDeltaR, Float_t betastar);
+Int_t puJetID( Float_t eta, Float_t meanSqDeltaR, Float_t betastar);
 Double_t deltaR( const Float_t eta1, const Float_t eta2, const Float_t phi1, const Float_t phi2 );
 
-void selectDelphes(const TString inputfile="root://eoscms.cern.ch//store/group/phys_higgs/upgrade/PhaseII/Configuration4v2/140PileUp/HHToGGBB_14TeV/HHToGGBB_14TeV_0.root",
-const Double_t xsec=1341.36923, Int_t signalFlag=1) {
+void selectDelphes(const TString inputfile="test.root", const Double_t xsec=0, const Int_t signalFlag=0){
 	
 	TString inputFile = inputfile;
 	if(signalFlag == 1) inputFile.Remove(0,15);
@@ -55,7 +50,7 @@ const Double_t xsec=1341.36923, Int_t signalFlag=1) {
 	cout << tempString;
 	
 	if (!(branchJet)) {
-		cout << " file broken" << endl;
+		cout << "  file broken" << endl;
 		return;
 	}
 
@@ -67,10 +62,9 @@ const Double_t xsec=1341.36923, Int_t signalFlag=1) {
 
 	// set up storage variables
 	Jet *bJet1=0, *bJet2=0, *bJet3=0, *bJet4=0, *Jet1=0, *Jet2=0;
-	Int_t nbJet1, nbJet2, nbJet3, nbJet4, nJet1, nJet2;
 	Double_t weight=3000000*xsec;
 	UInt_t nEvents=0;
-	Int_t nLeptons=0, nLeptons01=0, nLeptons04=0, nJets=0, nJetsHighPt=0, nCentralLightJets=0, nCentralLightJetsPU=0;
+	Int_t nLeptons=0, nLeptons01=0, nLeptons04=0, nJets=0, nJetsNoPU=0;
 	
 	Double_t bjet1_Pt, bjet1_Eta, bjet1_Phi, bjet1_Mass;
 	Double_t bjet2_Pt, bjet2_Eta, bjet2_Phi, bjet2_Mass;
@@ -120,17 +114,14 @@ const Double_t xsec=1341.36923, Int_t signalFlag=1) {
 	outTree->Branch("nLeptons01",	&nLeptons01,   	"nLeptons01/I");
 	outTree->Branch("nLeptons04",	&nLeptons04,   	"nLeptons04/I");
 	outTree->Branch("nJets",		&nJets,    		"nJets/I");
-	outTree->Branch("nJetsHighPt",	&nJetsHighPt,  	"nJetsHighPt/I");
-	outTree->Branch("nCentralLightJets",	&nCentralLightJets,  	"nCentralLightJets/I");
-	outTree->Branch("nCentralLightJetsPU",	&nCentralLightJetsPU,  	"nCentralLightJetsPU/I");
+	outTree->Branch("nJetsNoPU",	&nJetsNoPU,  	"nJetsNoPU/I");
 
 
 	for (Int_t iEntry=0; iEntry<numberOfEntries; iEntry++) { // entry loop
 		treeReader->ReadEntry(iEntry);
 
-		// Reset index and storage variables
-		nbJet1=nbJet2=nbJet3=nbJet4=nJet1=nJet2=-1;
-		nLeptons=nLeptons01=nLeptons04=nJets=nJetsHighPt=nCentralLightJets=nCentralLightJetsPU=0;
+		// Reset variables
+		nLeptons=nLeptons01=nLeptons04=nJets=nJetsNoPU=0;
 		
 		weight=3000000*xsec;
 		if(signalFlag == 0) weight *= ((LHEFEvent*) branchEvent->At(0))->Weight;
@@ -139,129 +130,101 @@ const Double_t xsec=1341.36923, Int_t signalFlag=1) {
 		for (Int_t iJet=0; iJet<branchJet->GetEntries(); iJet++) { // Jet loop
 			jet = (Jet*) branchJet->At(iJet);
 			
-			if(jet->PT <= 30) continue;
+			if(jet->PT <= 30 || jet->Eta >= 4) continue;
 			
 			bool count = true;
 					
 			for (Int_t iP=0; iP<branchElectron->GetEntries(); iP++) {
 				electron = (Electron*) branchElectron->At(iP);
-				if(electron->PT > 10 && electron->IsolationVar < 0.4 && deltaR(electron->Eta, jet->Eta, electron->Phi, jet->Phi) < 0.4) count = false;
+				if(electron->PT > 25 && electron->IsolationVar < 0.4 && deltaR(electron->Eta, jet->Eta, electron->Phi, jet->Phi) < 0.4) count = false;
 			}
 			for (Int_t iP=0; iP<branchMuon->GetEntries(); iP++) {
 				muon = (Muon*) branchMuon->At(iP);
-				if(muon->PT > 10 && muon->IsolationVar < 0.4 && deltaR(muon->Eta, jet->Eta, muon->Phi, jet->Phi) < 0.4) count = false;
+				if(muon->PT > 25 && muon->IsolationVar < 0.4 && deltaR(muon->Eta, jet->Eta, muon->Phi, jet->Phi) < 0.4) count = false;
 			}
 			for (Int_t iP=0; iP<branchPhoton->GetEntries(); iP++) {
 				photon = (Photon*) branchPhoton->At(iP);
-				if(photon->PT > 10 && photon->IsolationVar < 0.4 && deltaR(photon->Eta, jet->Eta, photon->Phi, jet->Phi) < 0.4) count = false;
+				if(photon->PT > 25 && photon->IsolationVar < 0.4 && deltaR(photon->Eta, jet->Eta, photon->Phi, jet->Phi) < 0.4) count = false;
 			}
 			
 			//Ignore jets near isolated objects
 			if(!count) continue;
 			
-			if((jet->PT > 30) && (fabs(jet->Eta) < 1.0) && !(jet->BTag == 2 || jet->BTag == 3 || jet->BTag == 6 || jet->BTag == 7)) nCentralLightJets++;
+			nJets++;
 
-			if ((puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar) == 0) && (jet->PT > 30) && (fabs(jet->Eta) < 4.0)){
+			if (puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar) == 0){
 				
-				nJets++;
-				if((fabs(jet->Eta) < 1.0) && !(jet->BTag == 2 || jet->BTag == 3 || jet->BTag == 6 || jet->BTag == 7)) nCentralLightJetsPU++;
-				if(jet->PT > 40) nJetsHighPt++;
+				nJetsNoPU++;
 
 				if((jet->BTag == 2 || jet->BTag == 3 || jet->BTag == 6 || jet->BTag == 7) && (fabs(jet->Eta) < 2.5)){
 					
-					if(nbJet1 == -1){
+					if(!bJet1){
 						
-						nbJet1 = iJet;
-						bJet1 = (Jet*) branchJet->At(nbJet1);
+						bJet1 = (Jet*) branchJet->At(iJet);
 						
 					}
 					else if(jet->PT > bJet1->PT){
 
-						nbJet4 = nbJet3;
-						bJet4 = (Jet*) branchJet->At(nbJet4);
-
-						nbJet3 = nbJet2;
-						bJet3 = (Jet*) branchJet->At(nbJet3);
-
-						nbJet2 = nbJet1;
-						bJet2 = (Jet*) branchJet->At(nbJet2);
-
-						nbJet1 = iJet;
-						bJet1 = (Jet*) branchJet->At(nbJet1);
+						bJet4 = bJet3;
+						bJet3 = bJet2;
+						bJet2 = bJet1;
+						bJet1 = (Jet*) branchJet->At(iJet);
 
 					}
-					else if(nbJet2 == -1){
+					else if(!bJet2){
 
-						nbJet2 = iJet;
-						bJet2 = (Jet*) branchJet->At(nbJet2);
+						bJet2 = (Jet*) branchJet->At(iJet);
 
 					}
 					else if(jet->PT > bJet2->PT){
 
-						nbJet4 = nbJet3;
-						bJet4 = (Jet*) branchJet->At(nbJet4);
-
-						nbJet3 = nbJet2;
-						bJet3 = (Jet*) branchJet->At(nbJet3);
-
-						nbJet2 = iJet;
-						bJet2 = (Jet*) branchJet->At(nbJet2);
+						bJet4 = bJet3;
+						bJet3 = bJet2;
+						bJet2 = (Jet*) branchJet->At(iJet);
 
 					}
-					else if(nbJet3 == -1){
+					else if(!bJet3){
 
-					nbJet3 = iJet;
-					bJet3 = (Jet*) branchJet->At(nbJet3);
+						bJet3 = (Jet*) branchJet->At(iJet);
 
 					}
 					else if(jet->PT > bJet3->PT){
 
-						nbJet4 = nbJet3;
-						bJet4 = (Jet*) branchJet->At(nbJet4);
-
-						nbJet3 = iJet;
-						bJet3 = (Jet*) branchJet->At(nbJet3);
+						bJet4 = bJet3;
+						bJet3 = (Jet*) branchJet->At(iJet);
 
 					}
-					else if(nbJet4 == -1){
+					else if(!bJet4){
 
-						nbJet4 = iJet;
-						bJet4 = (Jet*) branchJet->At(nbJet4);
+						bJet4 = (Jet*) branchJet->At(iJet);
 
 					}
 					else if(jet->PT > bJet4->PT){
 
-						nbJet4 = iJet;
-						bJet4 = (Jet*) branchJet->At(nbJet4);
+						bJet4 = (Jet*) branchJet->At(iJet);
 
 					}
 				}
 				else if(!(jet->BTag == 2 || jet->BTag == 3 || jet->BTag == 6 || jet->BTag == 7)){
-					if(nJet1 == -1){
+					if(!Jet1){
 
-						nJet1 = iJet;
-						Jet1 = (Jet*) branchJet->At(nJet1);
+						Jet1 = (Jet*) branchJet->At(iJet);
 
 					}
 					else if((jet->PT > Jet1->PT)){
 
-						nJet2 = nJet1;
-						Jet2 = (Jet*) branchJet->At(nJet2);
-
-						nJet1 = iJet;
-						Jet1 = (Jet*) branchJet->At(nJet1);
+						Jet2 = Jet1;
+						Jet1 = (Jet*) branchJet->At(iJet);
 
 					}
-					else if(nJet2 == -1){
+					else if(!Jet2){
 
-						nJet2 = iJet;
-						Jet2 = (Jet*) branchJet->At(nJet2);
+						Jet2 = (Jet*) branchJet->At(iJet);
 
 					}
 					else if(jet->PT > Jet2->PT){
 
-						nJet2 = iJet;
-						Jet2 = (Jet*) branchJet->At(nJet2);
+						Jet2 = (Jet*) branchJet->At(iJet);
 
 					}
 
@@ -272,7 +235,7 @@ const Double_t xsec=1341.36923, Int_t signalFlag=1) {
 		} // End jet loop
 		
 		// Check if there are four bjets and two light jets
-		if((nJet1!=-1) && (nJet2!=-1) && (nbJet1!=-1) && (nbJet2!=-1) && (nbJet3!=-1) && (nbJet4!=-1)){
+		if((bJet1) && (bJet2) && (bJet3) && (bJet4) && (Jet1) && (Jet2)){
 			
 			nLeptons = branchElectron->GetEntries() + branchMuon->GetEntries();
 			
@@ -336,7 +299,7 @@ const Double_t xsec=1341.36923, Int_t signalFlag=1) {
 }
 
 
-int puJetID( Float_t eta, Float_t meanSqDeltaR, Float_t betastar) {
+Int_t puJetID( Float_t eta, Float_t meanSqDeltaR, Float_t betastar) {
   
 	Float_t MeanSqDeltaRMaxBarrel=0.07;
 	Float_t BetaMinBarrel=0.87;

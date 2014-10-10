@@ -1,11 +1,3 @@
-//-------------------------------------------------------------------
-// Clean up merged files from lxbtch
-//
-// execute with:
-// root -l -q cleanUpMergedFiles(_infile_, _outfile_)
-//
-// Jay Lawhorn 11/4/13
-//-------------------------------------------------------------------
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TROOT.h>
 #include <TSystem.h>
@@ -29,77 +21,109 @@
 
 #endif
 
-void cleanUpMergedFiles(TString infilename="/afs/cern.ch/work/k/klawhorn/SnowmassSamples/PhaseII/Configuration4v2/Working/LL-4p-0-100-v1510_14TEV_temp.root",
-			  TString outfilename="/afs/cern.ch/work/a/ariostas/SnowmassSamples/PhaseII/Configuration4v2/Working/LL-4p-0-100-v1510_14TEV_clean.root") {
+void cleanUpMergedFiles(TString infilename="/filepath/test.root", TString outfilename="test.root") {
 
-  // set up input/output variables and file
-  UInt_t nEvents;
-  Double_t weight;
-  Int_t nLeptons=0, nJets=0, nJetsHighPt=0;
-  Double_t corrb1=0, corrb2=0, corrb3=0, corrb4=0, corrj1=0, corrj2=0;
+	// set up input/output variables and file
+	UInt_t nEvents;
+	Double_t weight;
+	Int_t nLeptons=0, nLeptons01=0, nLeptons04=0, nJets=0, nJetsNoPU=0;
   
-  Jet *bJet1=0, *bJet2=0, *bJet3=0, *bJet4=0, *Jet1=0, *Jet2=0;
+	Double_t bjet1_Pt, bjet1_Eta, bjet1_Phi, bjet1_Mass;
+	Double_t bjet2_Pt, bjet2_Eta, bjet2_Phi, bjet2_Mass;
+	Double_t bjet3_Pt, bjet3_Eta, bjet3_Phi, bjet3_Mass;
+	Double_t bjet4_Pt, bjet4_Eta, bjet4_Phi, bjet4_Mass;
+	Double_t jet1_Pt, jet1_Eta, jet1_Phi, jet1_Mass;
+	Double_t jet2_Pt, jet2_Eta, jet2_Phi, jet2_Mass;
 
-  TFile* infile = new TFile(infilename); assert(infile);
-  TTree* intree = (TTree*) infile->Get("Events"); assert(intree);
+	TFile* infile = new TFile(infilename); assert(infile);
+	TTree* intree = (TTree*) infile->Get("Events"); assert(intree);
 
-  intree->SetBranchAddress("weight",	&weight);
-  intree->SetBranchAddress("bJet1",		&bJet1);
-  intree->SetBranchAddress("bJet2",		&bJet2);
-  intree->SetBranchAddress("bJet3",		&bJet3);
-  intree->SetBranchAddress("bJet4",		&bJet4);
-  intree->SetBranchAddress("Jet1",     &Jet1);
-  intree->SetBranchAddress("Jet2",     &Jet2);
-  intree->SetBranchAddress("nLeptons",     &nLeptons);
-  intree->SetBranchAddress("nJets",     &nJets);
-  intree->SetBranchAddress("nJetsHighPt",     &nJetsHighPt);
-  intree->SetBranchAddress("corrb1",     &corrb1);
-  intree->SetBranchAddress("corrb2",     &corrb2);
-  intree->SetBranchAddress("corrb3",     &corrb3);
-  intree->SetBranchAddress("corrb4",     &corrb4);
-  intree->SetBranchAddress("corrj1",     &corrj1);
-  intree->SetBranchAddress("corrj2",     &corrj2);
+	intree->SetBranchAddress("weight",		&weight);
+	intree->SetBranchAddress("bjet1_Pt",	&bjet1_Pt);
+	intree->SetBranchAddress("bjet1_Eta",	&bjet1_Eta);
+	intree->SetBranchAddress("bjet1_Phi",	&bjet1_Phi);
+	intree->SetBranchAddress("bjet1_Mass",	&bjet1_Mass);
+	intree->SetBranchAddress("bjet2_Pt",	&bjet2_Pt);
+	intree->SetBranchAddress("bjet2_Eta",	&bjet2_Eta);
+	intree->SetBranchAddress("bjet2_Phi",	&bjet2_Phi);
+	intree->SetBranchAddress("bjet2_Mass",	&bjet2_Mass);
+	intree->SetBranchAddress("bjet3_Pt",	&bjet3_Pt);
+	intree->SetBranchAddress("bjet3_Eta",	&bjet3_Eta);
+	intree->SetBranchAddress("bjet3_Phi",	&bjet3_Phi);
+	intree->SetBranchAddress("bjet3_Mass",	&bjet3_Mass);
+	intree->SetBranchAddress("bjet4_Pt",	&bjet4_Pt);
+	intree->SetBranchAddress("bjet4_Eta",	&bjet4_Eta);
+	intree->SetBranchAddress("bjet4_Phi",	&bjet4_Phi);
+	intree->SetBranchAddress("bjet4_Mass",	&bjet4_Mass);
+	intree->SetBranchAddress("jet1_Pt",		&jet1_Pt);
+	intree->SetBranchAddress("jet1_Eta",	&jet1_Eta);
+	intree->SetBranchAddress("jet1_Phi",	&jet1_Phi);
+	intree->SetBranchAddress("jet1_Mass",	&jet1_Mass);
+	intree->SetBranchAddress("jet2_Pt",		&jet2_Pt);
+	intree->SetBranchAddress("jet2_Eta",	&jet2_Eta);
+	intree->SetBranchAddress("jet2_Phi",	&jet2_Phi);
+	intree->SetBranchAddress("jet2_Mass",	&jet2_Mass);
+	intree->SetBranchAddress("nLeptons",    &nLeptons);
+	intree->SetBranchAddress("nLeptons01",  &nLeptons01);
+	intree->SetBranchAddress("nLeptons04",  &nLeptons04);
+	intree->SetBranchAddress("nJets",     	&nJets);
+	intree->SetBranchAddress("nJetsNoPU",   &nJetsNoPU);
 
-  TTree* infotree = (TTree*) infile->Get("Info"); assert(infotree);
-  infotree->SetBranchAddress("nEvents",      &nEvents);
+	TTree* infotree = (TTree*) infile->Get("Info"); assert(infotree);
+	infotree->SetBranchAddress("nEvents",      &nEvents);
 
-  Long64_t totalEvents=0;
+	Long64_t totalEvents=0;
 
-  for (UInt_t iEntry=0; iEntry<infotree->GetEntries(); iEntry++) {
-    infotree->GetEntry(iEntry);
-    totalEvents+=nEvents;
-  }
+	for (UInt_t iEntry=0; iEntry<infotree->GetEntries(); iEntry++) {
+		infotree->GetEntry(iEntry);
+		totalEvents+=nEvents;
+	}
 
-  TFile *outFile = new TFile(outfilename, "RECREATE");
+	TFile *outFile = new TFile(outfilename, "RECREATE");
 
-  // tree to hold information about selected events
-  TTree *outTree = new TTree("Events", "Events");
-	outTree->Branch("weight",		&weight,    "weight/D");  // number of jets
-	outTree->Branch("bJet1",   		"Jet", &bJet1); // 4-vector for leading jet
-	outTree->Branch("bJet2",   		"Jet", &bJet2); // 4-vector for second jet
-	outTree->Branch("bJet3",   		"Jet", &bJet3); // 4-vector for second jet
-	outTree->Branch("bJet4",   		"Jet", &bJet4); // 4-vector for second jet
-	outTree->Branch("Jet1",   		"Jet", &Jet1); // 4-vector for second jet
-	outTree->Branch("Jet2",   		"Jet", &Jet2); // 4-vector for second jet 
-	outTree->Branch("nLeptons",		&nLeptons,    "nLeptons/I");  // number of jets
-	outTree->Branch("nJets",		&nJets,    "nJets/I");  // number of jets
-	outTree->Branch("nJetsHighPt",	&nJetsHighPt,    "nJetsHighPt/I");  // number of jets
-	outTree->Branch("corrb1",		&corrb1,    "corrb1/D");  // number of jets
-	outTree->Branch("corrb2",		&corrb2,    "corrb2/D");  // number of jets
-	outTree->Branch("corrb3",		&corrb3,    "corrb3/D");  // number of jets
-	outTree->Branch("corrb4",		&corrb4,    "corrb4/D");  // number of jets
-	outTree->Branch("corrj1",		&corrj1,    "corrj1/D");  // number of jets
-	outTree->Branch("corrj2",		&corrj2,    "corrj2/D");  // number of jets
+	// tree to hold information about selected events
+	TTree *outTree = new TTree("Events", "Events");
+	outTree->Branch("weight",		&weight,    	"weight/D");
+	outTree->Branch("bjet1_Pt",		&bjet1_Pt,  	"bjet1_Pt/D");
+	outTree->Branch("bjet1_Eta",	&bjet1_Eta,  	"bjet1_Eta/D");
+	outTree->Branch("bjet1_Phi",	&bjet1_Phi,  	"bjet1_Phi/D");
+	outTree->Branch("bjet1_Mass",	&bjet1_Mass,  	"bjet1_Mass/D");
+	outTree->Branch("bjet2_Pt",		&bjet2_Pt,  	"bjet2_Pt/D");
+	outTree->Branch("bjet2_Eta",	&bjet2_Eta,  	"bjet2_Eta/D");
+	outTree->Branch("bjet2_Phi",	&bjet2_Phi,  	"bjet2_Phi/D");
+	outTree->Branch("bjet2_Mass",	&bjet2_Mass,  	"bjet2_Mass/D");
+	outTree->Branch("bjet3_Pt",		&bjet3_Pt,  	"bjet3_Pt/D");
+	outTree->Branch("bjet3_Eta",	&bjet3_Eta,  	"bjet3_Eta/D");
+	outTree->Branch("bjet3_Phi",	&bjet3_Phi,  	"bjet3_Phi/D");
+	outTree->Branch("bjet3_Mass",	&bjet3_Mass,  	"bjet3_Mass/D");
+	outTree->Branch("bjet4_Pt",		&bjet4_Pt,  	"bjet4_Pt/D");
+	outTree->Branch("bjet4_Eta",	&bjet4_Eta,  	"bjet4_Eta/D");
+	outTree->Branch("bjet4_Phi",	&bjet4_Phi,  	"bjet4_Phi/D");
+	outTree->Branch("bjet4_Mass",	&bjet4_Mass,  	"bjet4_Mass/D");
+	outTree->Branch("jet1_Pt",		&jet1_Pt,  		"jet1_Pt/D");
+	outTree->Branch("jet1_Eta",		&jet1_Eta,  	"jet1_Eta/D");
+	outTree->Branch("jet1_Phi",		&jet1_Phi,  	"jet1_Phi/D");
+	outTree->Branch("jet1_Mass",	&jet1_Mass,  	"jet1_Mass/D");
+	outTree->Branch("jet2_Pt",		&jet2_Pt,  		"jet2_Pt/D");
+	outTree->Branch("jet2_Eta",		&jet2_Eta,  	"jet2_Eta/D");
+	outTree->Branch("jet2_Phi",		&jet2_Phi,  	"jet2_Phi/D");
+	outTree->Branch("jet2_Mass",	&jet2_Mass,  	"jet2_Mass/D");
+	outTree->Branch("nLeptons",		&nLeptons,    	"nLeptons/I");
+	outTree->Branch("nLeptons01",	&nLeptons01,   	"nLeptons01/I");
+	outTree->Branch("nLeptons04",	&nLeptons04,   	"nLeptons04/I");
+	outTree->Branch("nJets",		&nJets,    		"nJets/I");
+	outTree->Branch("nJetsNoPU",	&nJetsNoPU,  	"nJetsNoPU/I");
 
-  for(UInt_t iEntry=0; iEntry<intree->GetEntries(); iEntry++) { // entry loop
-    intree->GetEntry(iEntry);
-	weight/=Double_t(totalEvents);
+	for(UInt_t iEntry=0; iEntry<intree->GetEntries(); iEntry++) {
+		intree->GetEntry(iEntry);
+		weight/=Double_t(totalEvents);
 
-    outTree->Fill();
+		outTree->Fill();
 
-  }
-  outFile->Write();
-  outFile->Close();
+	}
+	
+	outFile->Write();
+	outFile->Close();
   
 	cout << "Finished " << outfilename << " with " << totalEvents << " total events" << endl;
 

@@ -1,11 +1,10 @@
 /*
- * vbf-bbbb.C
  * 
- * This macro analyses signal and background samples for vbf-bbbb.
- * To run use "root vbf-bbbb.C+" or "root vbf-bbbb.C+\(\"name of sample\"\)"
+ * This code is experimental, it runs over the  small ntuples generated with
+ * the experimental selection. It's very messy and buggy, use with caution.
  * 
- * Code by: Andres Rios
- */
+*/
+
 
 // Include ROOT and C++ libraries
 #include <TROOT.h>
@@ -43,18 +42,38 @@ int puJetID(Float_t, Float_t, Float_t);
 Double_t deltaR( const Float_t eta1, const Float_t eta2, const Float_t phi1, const Float_t phi2 );
 
 // Initialize histograms
-TH1D *hNLeptonsS = new TH1D("hNLeptonsS", "hNLeptonsS", 6, -0.5, 5.5);			TH1D *hNLeptonsB = new TH1D("hNLeptonsB", "hNLeptonsB", 6, -0.5, 5.5);
-TH1D *hNJetsPUS = new TH1D("hNJetsPUS", "hNJetsPUS", 6, 5.5, 11.5);				TH1D *hNJetsPUB = new TH1D("hNJetsPUB", "hNJetsPUB", 6, 5.5, 11.5);
-TH1D *hNBJetsS = new TH1D("hNBJetsS", "hNBJetsS", 7, -0.5, 6.5);				TH1D *hNBJetsB = new TH1D("hNBJetsB", "hNBJetsB", 7, -0.5, 6.5);
+TH1D *hMassdiJetS = new TH1D("MassdiJetS", "MassdiJetS", 200, 0, 4000);
+TH1D *hInJetsS = new TH1D("InJetsS", "InJetsS", 7, -0.5, 6.5);
+TH1D *hdRJJS = new TH1D("hdRJJS", "hdRJJS", 200, 0, 6);
+TH1D *hdRBJS = new TH1D("hdRBJS", "hdRBJS", 200, 0, 9);
+TH1D *hdES = new TH1D("hdES", "hdES", 200, -0.5, 10.5);
 
-TH1D *hDRbbS = new TH1D("hDRbbS", "hDRbbS", 50, 0, 3);							TH1D *hDRbbB = new TH1D("hDRbbB", "hDRbbB", 50, 0, 3);
-TH1D *hDRbjS = new TH1D("hDRbjS", "hDRbjS", 50, 0, 3);							TH1D *hDRbjB = new TH1D("hDRbjB", "hDRbjB", 50, 0, 3);
-TH1D *hDRjjS = new TH1D("hDRjjS", "hDRjjS", 50, 0, 9);							TH1D *hDRjjB = new TH1D("hDRjjB", "hDRjjB", 50, 0, 9);
-TH1D *hDEjjS = new TH1D("hDEjjS", "hDEjjS", 50, 0, 10);							TH1D *hDEjjB = new TH1D("hDEjjB", "hDEjjB", 50, 0, 10);
+TH1D *hTestS = new TH1D("testS", "testS", 200, 0, 1000);
 
-TH1D *hMjjS = new TH1D("hMjjS", "hMjjS", 50, 0, 4000);							TH1D *hMjjB = new TH1D("hMjjB", "hMjjB", 50, 0, 4000);
-TH1D *hMHHS = new TH1D("hMHHS", "hMHHS", 50, 100, 1000);						TH1D *hMHHB = new TH1D("hMHHB", "hMHHB", 50, 100, 1000);
-TH1D *hMbbS = new TH1D("hMbbS", "hMbbS", 7, -0.5, 6.5);							TH1D *hMbbB = new TH1D("hMbbB", "hMbbB", 7, -0.5, 6.5);
+TH1D *hMassdiJetB = new TH1D("MassdiJetB", "MassdiJetB", 200, 0, 4000);
+TH1D *hInJetsB = new TH1D("InJetsB", "InJetsB", 7, -0.5, 6.5);
+TH1D *hdRJJB = new TH1D("hdRJJB", "hdRJJB", 200, 0, 6);
+TH1D *hdRBJB = new TH1D("hdRBJB", "hdRBJB", 200, 0, 9);
+TH1D *hdEB = new TH1D("hdEB", "hdEB", 200, -0.5, 10.5);
+
+TH1D *hTestB = new TH1D("testB", "testB", 200, 0, 1000);
+
+TH1D *hTest1S = new TH1D("test1S", "test1S", 7, -0.5, 6.5);						TH1D *hTest1B = new TH1D("test1B", "test1B", 7, -0.5, 6.5);
+TH1D *hTest2S = new TH1D("test2S", "test2S", 11, -0.5, 10.5);					TH1D *hTest2B = new TH1D("test2B", "test2B", 11, -0.5, 10.5);
+TH1D *hTest3S = new TH1D("test3S", "test3S", 11, -0.5, 10.5);						TH1D *hTest3B = new TH1D("test3B", "test3B", 11, -0.5, 10.5);
+TH1D *hTest4S = new TH1D("test4S", "test4S", 250, 0, 600);						TH1D *hTest4B = new TH1D("test4B", "test4B", 250, 0, 600);
+TH1D *hTest5S = new TH1D("test5S", "test5S", 6, -0.5, 5.5);						TH1D *hTest5B = new TH1D("test5B", "test5B", 6, -0.5, 5.5);
+
+TH1D *hTest6S = new TH1D("test6S", "test6S", 100, 30, 150);						TH1D *hTest6B = new TH1D("test6B", "test6B", 100, 30, 150);
+TH1D *hTest7S = new TH1D("test7S", "test7S", 100, 30, 150);						TH1D *hTest7B = new TH1D("test7B", "test7B", 100, 30, 150);
+TH1D *hTest8S = new TH1D("test8S", "test8S", 100, 30, 150);						TH1D *hTest8B = new TH1D("test8B", "test8B", 100, 30, 150);
+TH1D *hTest9S = new TH1D("test9S", "test9S", 100, 30, 150);						TH1D *hTest9B = new TH1D("test9B", "test9B", 100, 30, 150);
+TH1D *hTest10S = new TH1D("test10S", "test10S", 100, 0, 350);					TH1D *hTest10B = new TH1D("test10B", "test10B", 100, 0, 350);
+TH1D *hTest11S = new TH1D("test11S", "test11S", 100, 30, 150);					TH1D *hTest11B = new TH1D("test11B", "test11B", 100, 30, 150);
+
+TH1D *hTest12S = new TH1D("test12S", "test12S", 200, 0, 250);					TH1D *hTest12B = new TH1D("test12B", "test12B", 200, 0, 250);
+TH1D *hTest13S = new TH1D("test13S", "test13S", 100, 0, 300);					TH1D *hTest13B = new TH1D("test13B", "test13B", 100, 0, 300);
+TH1D *hTest14S = new TH1D("test14S", "test14S", 100, -5, 5);					TH1D *hTest14B = new TH1D("test14B", "test14B", 100, -5, 5);
 
 // Initialyze storage variables
 Double_t totalSignal=0, selectionSignal = 0, kinCutSignal = 0, massCutSignal = 0;
@@ -67,12 +86,12 @@ Double_t ErrorSelectionBackground = 0, ErrorKinCutBackground = 0, ErrorMassCutBa
  * MAIN FUNCTION
  */
 
-void vbf_bbbb(TString backgroundSample = "all"){
+void vbf_bbbb_experimental(TString backgroundSample = "all"){
 	
 	BackgroundSample = backgroundSample;
 	
 	// Analyze signal
-	analyze("HHToBBBB_14TeV", 2.01*0.577*0.577, Signal);
+	analyze("HHToBBBB_14TeV", 0.669, Signal);
 	//analyze("gfHHToBBBB_14TeV", 40*0.577*0.577, Signal);
 	
 	if(BackgroundSample == "B"){
@@ -281,7 +300,7 @@ void analyze(TString inputfile, Double_t crossSection, bool SorB)
 {	
 	// The SorB variable is true if it's signal and false if it's a background
 	
-	const TString inputFile = "/afs/cern.ch/work/a/ariostas/public/vbf-bbbb/" + inputfile + ".root";
+	const TString inputFile = "/afs/cern.ch/work/a/ariostas/public/vbf-bbbb_test/" + inputfile + ".root";
 	
 	inputfile = "Reading " + inputfile + " events... ";
 	
@@ -298,43 +317,46 @@ void analyze(TString inputfile, Double_t crossSection, bool SorB)
 	Double_t jet2_Pt, jet2_Eta, jet2_Phi, jet2_Mass;
 	Double_t weight;
 	TLorentzVector vbJet1, vbJet2, vbJet3, vbJet4, vJet1, vJet2, vDiJet, vDiHiggs, v2bJetNoCross, v2bJetCross, vbJet01, vbJet02, vbJet03, vbJet04;
-	Int_t nLeptons=0, nLeptons01=0, nLeptons04=0, nJets=0, nJetsHighPt=0;
+	Int_t nLeptons=0, nLeptons01=0, nLeptons04=0, nJets=0, nBJets=0, nJetsPU=0, nBJetsPU=0, nDiJets=0;
 
 	TFile* infile = new TFile(inputFile); assert(infile);
 	TTree* intree = (TTree*) infile->Get("Events"); assert(intree);
 
-	intree->SetBranchAddress("weight",			&weight);
-	intree->SetBranchAddress("bjet1_Pt",		&bjet1_Pt);
-	intree->SetBranchAddress("bjet1_Eta",		&bjet1_Eta);
-	intree->SetBranchAddress("bjet1_Phi",		&bjet1_Phi);
-	intree->SetBranchAddress("bjet1_Mass",		&bjet1_Mass);
-	intree->SetBranchAddress("bjet2_Pt",		&bjet2_Pt);
-	intree->SetBranchAddress("bjet2_Eta",		&bjet2_Eta);
-	intree->SetBranchAddress("bjet2_Phi",		&bjet2_Phi);
-	intree->SetBranchAddress("bjet2_Mass",		&bjet2_Mass);
-	intree->SetBranchAddress("bjet3_Pt",		&bjet3_Pt);
-	intree->SetBranchAddress("bjet3_Eta",		&bjet3_Eta);
-	intree->SetBranchAddress("bjet3_Phi",		&bjet3_Phi);
-	intree->SetBranchAddress("bjet3_Mass",		&bjet3_Mass);
-	intree->SetBranchAddress("bjet4_Pt",		&bjet4_Pt);
-	intree->SetBranchAddress("bjet4_Eta",		&bjet4_Eta);
-	intree->SetBranchAddress("bjet4_Phi",		&bjet4_Phi);
-	intree->SetBranchAddress("bjet4_Mass",		&bjet4_Mass);
-	intree->SetBranchAddress("jet1_Pt",			&jet1_Pt);
-	intree->SetBranchAddress("jet1_Eta",		&jet1_Eta);
-	intree->SetBranchAddress("jet1_Phi",		&jet1_Phi);
-	intree->SetBranchAddress("jet1_Mass",		&jet1_Mass);
-	intree->SetBranchAddress("jet2_Pt",			&jet2_Pt);
-	intree->SetBranchAddress("jet2_Eta",		&jet2_Eta);
-	intree->SetBranchAddress("jet2_Phi",		&jet2_Phi);
-	intree->SetBranchAddress("jet2_Mass",		&jet2_Mass);
-	intree->SetBranchAddress("nLeptons",     	&nLeptons);
-	intree->SetBranchAddress("nLeptons01",  	&nLeptons01);
-	intree->SetBranchAddress("nLeptons04",    	&nLeptons04);
-	intree->SetBranchAddress("nJets",     		&nJets);
-	intree->SetBranchAddress("nJetsHighPt",   	&nJetsHighPt);
-
-	// Set up temporary variables
+	intree->SetBranchAddress("weight",		&weight);
+	intree->SetBranchAddress("bjet1_Pt",	&bjet1_Pt);
+	intree->SetBranchAddress("bjet1_Eta",	&bjet1_Eta);
+	intree->SetBranchAddress("bjet1_Phi",	&bjet1_Phi);
+	intree->SetBranchAddress("bjet1_Mass",	&bjet1_Mass);
+	intree->SetBranchAddress("bjet2_Pt",	&bjet2_Pt);
+	intree->SetBranchAddress("bjet2_Eta",	&bjet2_Eta);
+	intree->SetBranchAddress("bjet2_Phi",	&bjet2_Phi);
+	intree->SetBranchAddress("bjet2_Mass",	&bjet2_Mass);
+	intree->SetBranchAddress("bjet3_Pt",	&bjet3_Pt);
+	intree->SetBranchAddress("bjet3_Eta",	&bjet3_Eta);
+	intree->SetBranchAddress("bjet3_Phi",	&bjet3_Phi);
+	intree->SetBranchAddress("bjet3_Mass",	&bjet3_Mass);
+	intree->SetBranchAddress("bjet4_Pt",	&bjet4_Pt);
+	intree->SetBranchAddress("bjet4_Eta",	&bjet4_Eta);
+	intree->SetBranchAddress("bjet4_Phi",	&bjet4_Phi);
+	intree->SetBranchAddress("bjet4_Mass",	&bjet4_Mass);
+	intree->SetBranchAddress("jet1_Pt",		&jet1_Pt);
+	intree->SetBranchAddress("jet1_Eta",	&jet1_Eta);
+	intree->SetBranchAddress("jet1_Phi",	&jet1_Phi);
+	intree->SetBranchAddress("jet1_Mass",	&jet1_Mass);
+	intree->SetBranchAddress("jet2_Pt",		&jet2_Pt);
+	intree->SetBranchAddress("jet2_Eta",	&jet2_Eta);
+	intree->SetBranchAddress("jet2_Phi",	&jet2_Phi);
+	intree->SetBranchAddress("jet2_Mass",	&jet2_Mass);
+	intree->SetBranchAddress("nLeptons",    &nLeptons);
+	intree->SetBranchAddress("nLeptons01",  &nLeptons01);
+	intree->SetBranchAddress("nLeptons04",  &nLeptons04);
+	intree->SetBranchAddress("nJets",     	&nJets);
+	intree->SetBranchAddress("nBJets",     	&nBJets);
+	intree->SetBranchAddress("nJetsPU",     &nJetsPU);
+	intree->SetBranchAddress("nBJetsPU",    &nBJetsPU);
+	intree->SetBranchAddress("nDiJets",     &nDiJets);
+	
+	// Set up temporal variables
 	Double_t tempSelection=0, tempKinCut=0, tempMassCut=0;
 	Double_t tempErrorSelection=0, tempErrorKinCut=0, tempErrorMassCut=0;
 
@@ -353,89 +375,70 @@ void analyze(TString inputfile, Double_t crossSection, bool SorB)
 		vDiJet = vJet1 + vJet2;
 		vDiHiggs = vbJet1 + vbJet2 + vbJet3 + vbJet4;
 		
-		Int_t nBjetsBetweenLjets = 0;
+		Int_t inBJets = 0;
 		if(jet1_Eta > jet2_Eta){
 			
-			if((bjet1_Eta < jet1_Eta) && (bjet1_Eta > jet2_Eta))nBjetsBetweenLjets++;
-			if((bjet2_Eta < jet1_Eta) && (bjet2_Eta > jet2_Eta))nBjetsBetweenLjets++;
-			if((bjet3_Eta < jet1_Eta) && (bjet3_Eta > jet2_Eta))nBjetsBetweenLjets++;
-			if((bjet4_Eta < jet1_Eta) && (bjet4_Eta > jet2_Eta))nBjetsBetweenLjets++;
+			if((bjet1_Eta < jet1_Eta) && (bjet1_Eta > jet2_Eta))inBJets++;
+			if((bjet2_Eta < jet1_Eta) && (bjet2_Eta > jet2_Eta))inBJets++;
+			if((bjet3_Eta < jet1_Eta) && (bjet3_Eta > jet2_Eta))inBJets++;
+			if((bjet4_Eta < jet1_Eta) && (bjet4_Eta > jet2_Eta))inBJets++;
 			
 		}
 		else{
 			
-			if((bjet1_Eta > jet1_Eta) && (bjet1_Eta < jet2_Eta))nBjetsBetweenLjets++;
-			if((bjet2_Eta > jet1_Eta) && (bjet2_Eta < jet2_Eta))nBjetsBetweenLjets++;
-			if((bjet3_Eta > jet1_Eta) && (bjet3_Eta < jet2_Eta))nBjetsBetweenLjets++;
-			if((bjet4_Eta > jet1_Eta) && (bjet4_Eta < jet2_Eta))nBjetsBetweenLjets++;
+			if((bjet1_Eta > jet1_Eta) && (bjet1_Eta < jet2_Eta))inBJets++;
+			if((bjet2_Eta > jet1_Eta) && (bjet2_Eta < jet2_Eta))inBJets++;
+			if((bjet3_Eta > jet1_Eta) && (bjet3_Eta < jet2_Eta))inBJets++;
+			if((bjet4_Eta > jet1_Eta) && (bjet4_Eta < jet2_Eta))inBJets++;
 			
 		}
-		
-		(SorB ? hNBJetsS : hNBJetsB)->Fill(nBjetsBetweenLjets, weight);
-		(SorB ? hNJetsPUS : hNJetsPUB)->Fill(nJets, weight);
-		(SorB ? hNLeptonsS : hNLeptonsB)->Fill(nLeptons04, weight);
-		
-		//Check selection requirements
-		if(nLeptons04 != 0) continue;
-		if(nJets != 6) continue;
-		if(nBjetsBetweenLjets!=4) continue;
 			
 		tempSelection += weight;
 		tempErrorSelection++;
 		
-		Double_t minDRbb, minDRbb1, minDRbb2, minDRbb3, minDRbb4, minDRbb5, minDRbb6;
+		Double_t mindRb, mindRb1, mindRb2, mindRb3, mindRb4, mindRb5, mindRb6;
 		
-		minDRbb1 = deltaR(bjet1_Eta, bjet2_Eta, bjet1_Phi, bjet2_Phi);
-		minDRbb2 = deltaR(bjet1_Eta, bjet3_Eta, bjet1_Phi, bjet3_Phi);
-		minDRbb3 = deltaR(bjet1_Eta, bjet4_Eta, bjet1_Phi, bjet4_Phi);
-		minDRbb4 = deltaR(bjet2_Eta, bjet3_Eta, bjet2_Phi, bjet3_Phi);
-		minDRbb5 = deltaR(bjet2_Eta, bjet4_Eta, bjet2_Phi, bjet4_Phi);
-		minDRbb6 = deltaR(bjet3_Eta, bjet4_Eta, bjet3_Phi, bjet4_Phi);
+		mindRb1 = deltaR(bjet1_Eta, bjet2_Eta, bjet1_Phi, bjet2_Phi);
+		mindRb2 = deltaR(bjet1_Eta, bjet3_Eta, bjet1_Phi, bjet3_Phi);
+		mindRb3 = deltaR(bjet1_Eta, bjet4_Eta, bjet1_Phi, bjet4_Phi);
+		mindRb4 = deltaR(bjet2_Eta, bjet3_Eta, bjet2_Phi, bjet3_Phi);
+		mindRb5 = deltaR(bjet2_Eta, bjet4_Eta, bjet2_Phi, bjet4_Phi);
+		mindRb6 = deltaR(bjet3_Eta, bjet4_Eta, bjet3_Phi, bjet4_Phi);
 			
-		minDRbb = minDRbb1;
-		if(minDRbb2 < minDRbb) minDRbb = minDRbb2;
-		if(minDRbb3 < minDRbb) minDRbb = minDRbb3;
-		if(minDRbb4 < minDRbb) minDRbb = minDRbb4;
-		if(minDRbb5 < minDRbb) minDRbb = minDRbb5;
-		if(minDRbb6 < minDRbb) minDRbb = minDRbb6;
+		mindRb = mindRb1;
+		if(mindRb2 < mindRb) mindRb = mindRb2;
+		if(mindRb3 < mindRb) mindRb = mindRb3;
+		if(mindRb4 < mindRb) mindRb = mindRb4;
+		if(mindRb5 < mindRb) mindRb = mindRb5;
+		if(mindRb6 < mindRb) mindRb = mindRb6;
 		
-		Double_t minDRbj, minDRbj1, minDRbj2, minDRbj3, minDRbj4, minDRbj5, minDRbj6, minDRbj7, minDRbj8;
+		Double_t mindRbj, mindRbj1, mindRbj2, mindRbj3, mindRbj4, mindRbj5, mindRbj6, mindRbj7, mindRbj8;
 		
-		minDRbj1 = deltaR(jet1_Eta, bjet1_Eta, jet1_Phi, bjet1_Phi);
-		minDRbj2 = deltaR(jet1_Eta, bjet2_Eta, jet1_Phi, bjet2_Phi);
-		minDRbj3 = deltaR(jet1_Eta, bjet3_Eta, jet1_Phi, bjet3_Phi);
-		minDRbj4 = deltaR(jet1_Eta, bjet4_Eta, jet1_Phi, bjet4_Phi);
-		minDRbj5 = deltaR(jet2_Eta, bjet1_Eta, jet2_Phi, bjet1_Phi);
-		minDRbj6 = deltaR(jet2_Eta, bjet2_Eta, jet2_Phi, bjet2_Phi);
-		minDRbj7 = deltaR(jet2_Eta, bjet3_Eta, jet2_Phi, bjet3_Phi);
-		minDRbj8 = deltaR(jet2_Eta, bjet4_Eta, jet2_Phi, bjet4_Phi);
+		mindRbj1 = deltaR(jet1_Eta, bjet1_Eta, jet1_Phi, bjet1_Phi);
+		mindRbj2 = deltaR(jet1_Eta, bjet2_Eta, jet1_Phi, bjet2_Phi);
+		mindRbj3 = deltaR(jet1_Eta, bjet3_Eta, jet1_Phi, bjet3_Phi);
+		mindRbj4 = deltaR(jet1_Eta, bjet4_Eta, jet1_Phi, bjet4_Phi);
+		mindRbj5 = deltaR(jet2_Eta, bjet1_Eta, jet2_Phi, bjet1_Phi);
+		mindRbj6 = deltaR(jet2_Eta, bjet2_Eta, jet2_Phi, bjet2_Phi);
+		mindRbj7 = deltaR(jet2_Eta, bjet3_Eta, jet2_Phi, bjet3_Phi);
+		mindRbj8 = deltaR(jet2_Eta, bjet4_Eta, jet2_Phi, bjet4_Phi);
 			
-		minDRbj = minDRbj1;
-		if(minDRbj2 < minDRbj) minDRbj = minDRbj2;
-		if(minDRbj3 < minDRbj) minDRbj = minDRbj3;
-		if(minDRbj4 < minDRbj) minDRbj = minDRbj4;
-		if(minDRbj5 < minDRbj) minDRbj = minDRbj5;
-		if(minDRbj6 < minDRbj) minDRbj = minDRbj6;
-		if(minDRbj7 < minDRbj) minDRbj = minDRbj7;
-		if(minDRbj8 < minDRbj) minDRbj = minDRbj8;
+		mindRbj = mindRbj1;
+		if(mindRbj2 < mindRbj) mindRbj = mindRbj2;
+		if(mindRbj3 < mindRbj) mindRbj = mindRbj3;
+		if(mindRbj4 < mindRbj) mindRbj = mindRbj4;
+		if(mindRbj5 < mindRbj) mindRbj = mindRbj5;
+		if(mindRbj6 < mindRbj) mindRbj = mindRbj6;
+		if(mindRbj7 < mindRbj) mindRbj = mindRbj7;
+		if(mindRbj8 < mindRbj) mindRbj = mindRbj8;
 		
-		Double_t DRjj = deltaR(jet1_Eta, jet2_Eta, jet1_Eta, jet2_Eta);
-		Double_t DEjj = fabs(jet1_Eta - jet2_Eta);
-		
-		(SorB ? hDRjjS : hDRjjB)->Fill(DRjj, weight);
-		(SorB ? hDRbjS : hDRbjB)->Fill(minDRbj, weight);
-		(SorB ? hDRbbS : hDRbbB)->Fill(minDRbb, weight);
-		(SorB ? hDEjjS : hDEjjB)->Fill(DEjj, weight);
-		
-		// Check kinematic requirements
-		if(minDRbb < 0.75) continue;
-		if(DEjj < 4.25) continue;
+		Double_t dRJ = deltaR(jet1_Eta, jet2_Eta, jet1_Eta, jet2_Eta);
 			
 		tempKinCut += weight;
 		tempErrorKinCut++;	
 			
-		// Set up temporary TLorentzVectors
-		TLorentzVector test11, test12, test21, test22, test31, test32;
+		// Set up temporal TLorentzVectors
+		TLorentzVector test11, test12, test21, test22, test31, test32, higgs1, higgs2;
 		test11 = vbJet1 + vbJet2;
 		test12 = vbJet3 + vbJet4;
 		test21 = vbJet1 + vbJet3;
@@ -443,22 +446,126 @@ void analyze(TString inputfile, Double_t crossSection, bool SorB)
 		test31 = vbJet1 + vbJet4;
 		test32 = vbJet3 + vbJet2;
 		
-		Int_t nBJetPairsHiggsMass=0;
+		Int_t nHiggs=0;
 		
-		if((test11.M() > 90) && (test11.M() < 135) && (test12.M() > 90) && (test12.M() < 135)) nBJetPairsHiggsMass++; 
-		if((test21.M() > 90) && (test21.M() < 135) && (test22.M() > 90) && (test22.M() < 135)) nBJetPairsHiggsMass++;
-		if((test31.M() > 90) && (test31.M() < 135) && (test32.M() > 90) && (test32.M() < 135)) nBJetPairsHiggsMass++;
+		if((test11.M() > 90) && (test11.M() < 135) && (test12.M() > 90) && (test12.M() < 135)) nHiggs++; 
+		if((test21.M() > 90) && (test21.M() < 135) && (test22.M() > 90) && (test22.M() < 135)) nHiggs++;
+		if((test31.M() > 90) && (test31.M() < 135) && (test32.M() > 90) && (test32.M() < 135)) nHiggs++;
 		
-		(SorB ? hMHHS : hMHHB)->Fill(vDiHiggs.M(), weight);
-		(SorB ? hMjjS : hMjjB)->Fill(vDiJet.M(), weight);
-		(SorB ? hMbbS : hMbbB)->Fill(nBJetPairsHiggsMass, weight);
+		//if((test11.Pt() > 50) && (test12.Pt() > 50)){ nHiggs++; (SorB ? hdRJJS : hdRJJB)->Fill(deltaR(test11.Eta(), test12.Eta(), test11.Phi(), test12.Phi()), weight); (SorB ? hTest10S : hTest10B)->Fill(test11.Pt(), weight); (SorB ? hTest10S : hTest10B)->Fill(test12.Pt(), weight);}
+		//if((test21.Pt() > 50) && (test22.Pt() > 50)){ nHiggs++; (SorB ? hdRJJS : hdRJJB)->Fill(deltaR(test11.Eta(), test12.Eta(), test11.Phi(), test12.Phi()), weight); (SorB ? hTest10S : hTest10B)->Fill(test21.Pt(), weight); (SorB ? hTest10S : hTest10B)->Fill(test22.Pt(), weight);}
+		//if((test31.Pt() > 50) && (test32.Pt() > 50)){ nHiggs++; (SorB ? hdRJJS : hdRJJB)->Fill(deltaR(test11.Eta(), test12.Eta(), test11.Phi(), test12.Phi()), weight); (SorB ? hTest10S : hTest10B)->Fill(test31.Pt(), weight); (SorB ? hTest10S : hTest10B)->Fill(test32.Pt(), weight);}
 		
-		if(vDiHiggs.M() < 275) continue;
-		if(nBJetPairsHiggsMass!=1) continue;
-		if(vDiJet.M() < 400) continue;
+		//if((test11.M() > 85) && (test11.M() < 145) && (test12.M() > 85) && (test12.M() < 145) && (test11.Pt() > 50) && (test12.Pt() > 50) && (mindRb1 > 0.5) && (mindRb1 < 2) && (mindRb6 > 0.5) && (mindRb6 < 2)){ nHiggs++; higgs1 = test11; higgs2 = test12;}
+		//if((test21.M() > 85) && (test21.M() < 145) && (test22.M() > 85) && (test22.M() < 145) && (test21.Pt() > 50) && (test22.Pt() > 50) && (mindRb2 > 0.5) && (mindRb2 < 2) && (mindRb5 > 0.5) && (mindRb5 < 2)){ nHiggs++; higgs1 = test21; higgs2 = test22;}
+		//if((test31.M() > 85) && (test31.M() < 145) && (test32.M() > 85) && (test32.M() < 145) && (test31.Pt() > 50) && (test32.Pt() > 50) && (mindRb3 > 0.5) && (mindRb3 < 2) && (mindRb4 > 0.5) && (mindRb4 < 2)){ nHiggs++; higgs1 = test31; higgs2 = test32;}
+		
+		
+		//if((test11.M() > 90) && (test11.M() < 140) && (test12.M() > 90) && (test12.M() < 140) && (test11.Pt() > 50) && (test12.Pt() > 50)){ nHiggs++; (SorB ? hdRJJS : hdRJJB)->Fill(deltaR(test11.Eta(), test12.Eta(), test11.Phi(), test12.Phi()), weight); higgs1 = test11; higgs2 = test12;}
+		//if((test21.M() > 90) && (test21.M() < 140) && (test22.M() > 90) && (test22.M() < 140) && (test21.Pt() > 50) && (test22.Pt() > 50)){ nHiggs++; (SorB ? hdRJJS : hdRJJB)->Fill(deltaR(test11.Eta(), test12.Eta(), test11.Phi(), test12.Phi()), weight); higgs1 = test21; higgs2 = test22;}
+		//if((test31.M() > 90) && (test31.M() < 140) && (test32.M() > 90) && (test32.M() < 140) && (test31.Pt() > 50) && (test32.Pt() > 50)){ nHiggs++; (SorB ? hdRJJS : hdRJJB)->Fill(deltaR(test11.Eta(), test12.Eta(), test11.Phi(), test12.Phi()), weight); higgs1 = test31; higgs2 = test32;}
+		
+		Int_t ndRbb=0;
+		
+		//if((mindRb1 > 0.5) && (mindRb1 < 2) && (mindRb6 > 0.5) && (mindRb6 < 2)){ ndRbb++; (SorB ? hTest12S : hTest12B)->Fill(test11.M(), weight); (SorB ? hTest12S : hTest12B)->Fill(test12.M(), weight);}
+		//if((mindRb2 > 0.5) && (mindRb2 < 2) && (mindRb5 > 0.5) && (mindRb5 < 2)){ ndRbb++; (SorB ? hTest12S : hTest12B)->Fill(test21.M(), weight); (SorB ? hTest12S : hTest12B)->Fill(test22.M(), weight);}
+		//if((mindRb3 > 0.5) && (mindRb3 < 2) && (mindRb4 > 0.5) && (mindRb4 < 2)){ ndRbb++; (SorB ? hTest12S : hTest12B)->Fill(test31.M(), weight); (SorB ? hTest12S : hTest12B)->Fill(test32.M(), weight);}
+		
+		////////////////////////////////////////////////////////////////
+		
+		vJet1.SetPtEtaPhiM(jet1_Pt, jet1_Eta, jet1_Phi, jet1_Mass);
+		vJet2.SetPtEtaPhiM(jet2_Pt, jet2_Eta, jet2_Phi, jet2_Mass);
+		
+		if(deltaR(jet1_Eta, test11.Eta(), jet1_Phi, test11.Phi()) < deltaR(jet2_Eta, test11.Eta(), jet2_Phi, test11.Phi())){
+			
+			test21 = test11 + vJet1;
+			test22 = test12 + vJet2;
+			
+		}
+		
+		else{
+			
+			test21 = test11 + vJet2;
+			test22 = test12 + vJet1;
+		}
+		
+		if(nLeptons04 != 0) continue;
+		if(nJetsPU > 7) continue;
+		
+		//if(bjet1_Pt < 30) continue;
+		//if(bjet2_Pt < 30) continue;
+		//if(bjet3_Pt < 30) continue;
+		//if(bjet4_Pt < 30) continue;
+		//if(jet1_Pt < 30) continue;
+		//if(jet2_Pt < 30) continue;
+		
+		if(inBJets!=4) continue;
+		
+		if(mindRb < 0.75) continue;
+		if(mindRbj < 1.5) continue;
+		if(fabs(jet1_Eta - jet2_Eta) < 4) continue;
+		//if(deltaR(test11.Eta(), test12.Eta(), test11.Phi(), test12.Phi()) < 2) continue;
+		
+		//if(vDiHiggs.M() < 275) continue;
+		//if(nHiggs!=1) continue;
+		//if(vDiJet.M() < 500) continue;
+		
+		//if(nCentralLightJets != 0) continue;
+		
+		//if(ndRbb!=1) continue;
+		
+		if(test11.M() <= 90 || test11.M() >= 150) continue;
+		if(test12.M() <= 90 || test12.M() >= 150) continue;
+		
+		if(bjet1_Pt <= 80 || bjet3_Pt <= 80) continue;
 		
 		tempMassCut += weight;
 		tempErrorMassCut++;
+		
+		
+		(SorB ? hTest3S : hTest3B)->Fill(nJetsPU, weight);
+		//(SorB ? hTest2S : hTest2B)->Fill(nCentralLightJets, weight);
+		(SorB ? hTest5S : hTest5B)->Fill(nLeptons04, weight);
+		
+		(SorB ? hTest6S : hTest6B)->Fill(bjet1_Pt, weight);
+		(SorB ? hTest7S : hTest7B)->Fill(bjet2_Pt, weight);
+		(SorB ? hTest8S : hTest8B)->Fill(bjet3_Pt, weight);
+		(SorB ? hTest9S : hTest9B)->Fill(bjet4_Pt, weight);
+		(SorB ? hTest10S : hTest10B)->Fill(jet1_Pt, weight);
+		(SorB ? hTest11S : hTest11B)->Fill(jet2_Pt, weight);
+		(SorB ? hInJetsS : hInJetsB)->Fill(inBJets, weight);
+		(SorB ? hTest12S : hTest12B)->Fill(test11.M(), weight);
+		(SorB ? hTest12S : hTest12B)->Fill(test12.M(), weight);
+		(SorB ? hTest13S : hTest13B)->Fill(vDiJet.Pt(), weight);
+		(SorB ? hTest14S : hTest14B)->Fill(vDiHiggs.Eta(), weight);
+		(SorB ? hMassdiJetS : hMassdiJetB)->Fill(vDiJet.M(), weight);
+		(SorB ? hTest1S : hTest1B)->Fill(nHiggs, weight);
+		(SorB ? hdRJJS : hdRJJB)->Fill(mindRbj, weight);
+		(SorB ? hdRBJS : hdRBJB)->Fill(deltaR(test11.Eta(), test12.Eta(), test11.Phi(), test12.Phi()), weight);
+		//(SorB ? hdRBJS : hdRBJB)->Fill(fabs(jet2_Eta), weight);
+		(SorB ? hdES : hdEB)->Fill(fabs(jet1_Eta - jet2_Eta), weight);
+		//(SorB ? hdES : hdEB)->Fill(fabs(test11.Phi() - test12.Phi()), weight);
+		
+
+		////////////////////////////////temp////////////////////////////
+		
+		/*if(nLeptons01 != 0) continue;
+		if(nJets != 6) continue;
+		if(bjet1_Pt < 40) continue;
+		if(bjet2_Pt < 40) continue;
+		if(bjet3_Pt < 30) continue;
+		if(bjet4_Pt < 30) continue;
+		if(jet1_Pt < 30) continue;
+		if(jet2_Pt < 30) continue;
+		if(inBJets!=4) continue;
+		
+		if(fabs(jet1_Eta - jet2_Eta) < 4.25) continue;
+		if(mindRb < 0.75) continue;
+		if(nHiggs!=1) continue;
+		if(vDiHiggs.M() < 275) continue;
+		if(vDiJet.M() < 400) continue;*/
+		
+		////////////////////////////////////////////////////////////////
 		
 	} // end event loop
 	
@@ -481,7 +588,7 @@ void analyze(TString inputfile, Double_t crossSection, bool SorB)
 }
 
 /*
- * FUNCTION FOR PRINTING AND SAVING THE RESULTS
+ * FUNCTION FOR SAVING THE RESULTS
  */
 
 void saveResults(){
@@ -489,19 +596,30 @@ void saveResults(){
 	TCanvas *c1 = new TCanvas("Histogram", "Histogram", 1000, 600);
 	
 	gStyle->SetOptStat(kFALSE);
+
+
+	histogram(hdRJJS, hdRJJB, c1, "Minimum deltaR between bjets", "Count", "./Histograms/histogramdRbb_" + BackgroundSample + ".jpg");
+	histogram(hdRBJS, hdRBJB, c1, "DeltaR between light jets", "Count", "./Histograms/histogramdRjj_" + BackgroundSample + ".jpg");
+	histogram(hdES, hdEB, c1, "Delta eta between light jets", "Count", "./Histograms/histogramdEJ_" + BackgroundSample + ".jpg");
+	histogram(hMassdiJetS, hMassdiJetB, c1, "Reconstructed DiJet mass", "Count", "./Histograms/histogramMassdiJets_" + BackgroundSample + ".jpg");
+	histogram(hInJetsS, hInJetsB, c1, "Number of bjets between light jets", "Count", "./Histograms/histogramInBJets_" + BackgroundSample + ".jpg");
 	
-	histogram(hNLeptonsS, hNLeptonsB, c1, "Number of leptons", "Portion", "./Histograms/NLeptons_" + BackgroundSample + ".jpg");
-	histogram(hNJetsPUS, hNJetsPUB, c1, "Number of non-pileup jets", "Portion", "./Histograms/NJetsPU_" + BackgroundSample + ".jpg");
-	histogram(hNBJetsS, hNBJetsB, c1, "Number of bjets between light jets", "Portion", "./Histograms/NBJets_" + BackgroundSample + ".jpg");
+	histogram(hTest1S, hTest1B, c1, "Number of combinations with both M_bb in the range 90-135", "Count", "./Histograms/histogramTest1_" + BackgroundSample + ".jpg");
+	histogram(hTest3S, hTest3B, c1, "Number of non-pileup jets with pt > 30", "Count", "./Histograms/histogramTest3_" + BackgroundSample + ".jpg");
+	histogram(hTest5S, hTest5B, c1, "Number of leptons", "Count", "./Histograms/histogramTest5_" + BackgroundSample + ".jpg");
 	
-	histogram(hDRjjS, hDRjjB, c1, "#Delta R between light jets", "Portion", "./Histograms/DRjj_" + BackgroundSample + ".jpg");
-	histogram(hDRbjS, hDRbjB, c1, "Minimum #Delta R between bjets and light jets", "Portion", "./Histograms/DRbj_" + BackgroundSample + ".jpg");
-	histogram(hDRbbS, hDRbbB, c1, "Minimum #Delta R between bjets", "Portion", "./Histograms/DRbb_" + BackgroundSample + ".jpg");
-	histogram(hDEjjS, hDEjjB, c1, "#Delta #eta between light jets", "Portion", "./Histograms/DEjj_" + BackgroundSample + ".jpg");
+	histogram(hTest2S, hTest2B, c1, "Number of high pt jets", "Count", "./Histograms/histogramTest2_" + BackgroundSample + ".jpg");
 	
-	histogram(hMHHS, hMHHB, c1, "M_{HH}", "Portion", "./Histograms/MHH_" + BackgroundSample + ".jpg");
-	histogram(hMjjS, hMjjB, c1, "M_{jj}", "Portion", "./Histograms/Mjj_" + BackgroundSample + ".jpg");
-	histogram(hMbbS, hMbbB, c1, "Number of combinations with both M_{bb} in the range 90-135", "Portion", "./Histograms/Mbb_" + BackgroundSample + ".jpg");
+	histogram(hTest6S, hTest6B, c1, "bJet1 pt", "Count", "./Histograms/histogramTest6_" + BackgroundSample + ".jpg");
+	histogram(hTest7S, hTest7B, c1, "bJet2 pt", "Count", "./Histograms/histogramTest7_" + BackgroundSample + ".jpg");
+	histogram(hTest8S, hTest8B, c1, "bJet3 pt", "Count", "./Histograms/histogramTest8_" + BackgroundSample + ".jpg");
+	histogram(hTest9S, hTest9B, c1, "bJet4 pt", "Count", "./Histograms/histogramTest9_" + BackgroundSample + ".jpg");
+	histogram(hTest10S, hTest10B, c1, "Jet1 pt", "Count", "./Histograms/histogramTest10_" + BackgroundSample + ".jpg");
+	histogram(hTest11S, hTest11B, c1, "Jet2 pt", "Count", "./Histograms/histogramTest11_" + BackgroundSample + ".jpg");
+	
+	histogram(hTest12S, hTest12B, c1, "Reconstructed DiHiggs mass", "Count", "./Histograms/histogramTest12_" + BackgroundSample + ".jpg");
+	histogram(hTest13S, hTest13B, c1, "HH pt", "Count", "./Histograms/histogramTest13_" + BackgroundSample + ".jpg");
+	histogram(hTest14S, hTest14B, c1, "HH Eta", "Count", "./Histograms/histogramTest14_" + BackgroundSample + ".jpg");
 	
 	// Print event yields
 	cout << "\nSignal" << endl << endl;
@@ -524,22 +642,15 @@ void saveResultsS(){
 	
 	gStyle->SetOptStat(kFALSE);
 
-	histogram(hNLeptonsS, c1, "Number of leptons", "Portion", "./Histograms/NLeptons_" + BackgroundSample + ".jpg");
-	histogram(hNJetsPUS, c1, "Number of non-pileup jets", "Portion", "./Histograms/NJetsPU_" + BackgroundSample + ".jpg");
-	histogram(hNBJetsS, c1, "Number of bjets between light jets", "Portion", "./Histograms/NBJets_" + BackgroundSample + ".jpg");
-	
-	histogram(hDRjjS, c1, "#Delta R between light jets", "Portion", "./Histograms/DRjj_" + BackgroundSample + ".jpg");
-	histogram(hDRbjS, c1, "Minimum #Delta R between bjets and light jets", "Portion", "./Histograms/DRbj_" + BackgroundSample + ".jpg");
-	histogram(hDRbbS, c1, "Minimum #Delta R between bjets", "Portion", "./Histograms/DRbb_" + BackgroundSample + ".jpg");
-	histogram(hDEjjS, c1, "#Delta #eta between light jets", "Portion", "./Histograms/DEjj_" + BackgroundSample + ".jpg");
-	
-	histogram(hMHHS, c1, "M_{HH}", "Portion", "./Histograms/MHH_" + BackgroundSample + ".jpg");
-	histogram(hMjjS, c1, "M_{jj}", "Portion", "./Histograms/Mjj_" + BackgroundSample + ".jpg");
-	histogram(hMbbS, c1, "Number of combinations with both M_{bb} in the range 90-135", "Portion", "./Histograms/Mbb_" + BackgroundSample + ".jpg");
+	histogram(hdRJJS, c1, "minimum deltaR between bjets", "Count", "./Histograms/histogramdRbb_" + BackgroundSample + ".jpg");
+	histogram(hdRBJS, c1, "deltaR betwenn light jets", "Count", "./Histograms/histogramdRjj_" + BackgroundSample + ".jpg");
+	histogram(hdES, c1, "|d_eta| between light jets", "Count", "./Histograms/histogramdEJ_" + BackgroundSample + ".jpg");
+	histogram(hMassdiJetS, c1, "Mass diJet system", "Count", "./Histograms/histogramMassdiJets_" + BackgroundSample + ".jpg");
+	histogram(hInJetsS, c1, "Number of bjets between light jets", "Count", "./Histograms/histogramInBJets_" + BackgroundSample + ".jpg");
 	
 	// Print event yields
 	cout << "Signal" << endl << endl;
-	cout << "Total events: " << 2.01*3000*0.577*0.577 << endl;
+	cout << "Total events: " << 1.8*3000*0.577*0.577 << endl;
 	cout << "Events after event selection: " << selectionSignal << " +- " << ErrorSelectionSignal << endl;
 	cout << "Events after kinematic cuts: " << kinCutSignal << " +- " << ErrorKinCutSignal << endl;
 	cout << "Events after mass cuts: " << massCutSignal << " +- " << ErrorMassCutSignal << endl;
@@ -639,9 +750,6 @@ int puJetID( Float_t eta, Float_t meanSqDeltaR, Float_t betastar) {
 
 }
 
-/*
- * FUNCTION FOR dR calculation
- */
 Double_t deltaR( const Float_t eta1, const Float_t eta2, const Float_t phi1, const Float_t phi2 ) {
 
   const Float_t pi = 3.14159265358979;

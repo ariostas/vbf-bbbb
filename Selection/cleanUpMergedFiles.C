@@ -26,7 +26,7 @@ void cleanUpMergedFiles(TString infilename="/filepath/test.root", TString outfil
 	// set up input/output variables and file
 	UInt_t nEvents;
 	Double_t weight;
-	Int_t nLeptons=0, nLeptons01=0, nLeptons04=0, nJets=0, nJetsNoPU=0;
+	Int_t nLeptons=0, nLeptons01=0, nLeptons04=0, nJets=0, nJetsNoPU=0, matchedBJets=0, matchedLJets=0;
   
 	Double_t bjet1_Pt, bjet1_Eta, bjet1_Phi, bjet1_Mass;
 	Double_t bjet2_Pt, bjet2_Eta, bjet2_Phi, bjet2_Mass;
@@ -68,6 +68,8 @@ void cleanUpMergedFiles(TString infilename="/filepath/test.root", TString outfil
 	intree->SetBranchAddress("nLeptons04",  &nLeptons04);
 	intree->SetBranchAddress("nJets",     	&nJets);
 	intree->SetBranchAddress("nJetsNoPU",   &nJetsNoPU);
+	intree->SetBranchAddress("matchedBJets",  &matchedBJets);
+	intree->SetBranchAddress("matchedLJets",  &matchedLJets);
 
 	TTree* infotree = (TTree*) infile->Get("Info"); assert(infotree);
 	infotree->SetBranchAddress("nEvents",      &nEvents);
@@ -113,6 +115,8 @@ void cleanUpMergedFiles(TString infilename="/filepath/test.root", TString outfil
 	outTree->Branch("nLeptons04",	&nLeptons04,   	"nLeptons04/I");
 	outTree->Branch("nJets",		&nJets,    		"nJets/I");
 	outTree->Branch("nJetsNoPU",	&nJetsNoPU,  	"nJetsNoPU/I");
+	outTree->Branch("matchedBJets",	&matchedBJets,  "matchedBJets/I");
+	outTree->Branch("matchedLJets",	&matchedLJets,  "matchedLJets/I");
 
 	for(UInt_t iEntry=0; iEntry<intree->GetEntries(); iEntry++) {
 		intree->GetEntry(iEntry);

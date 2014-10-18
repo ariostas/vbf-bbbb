@@ -27,7 +27,7 @@ void cleanUpMergedFiles(TString infilename="/afs/cern.ch/work/k/klawhorn/Snowmas
   // set up input/output variables and file
   UInt_t nEvents;
   Double_t weight;
-  UInt_t nLeptons=0, nLeptons01=0, nLeptons04=0, nJets=0, nBJets=0, nJetsPU=0, nBJetsPU=0, nDiJets=0;
+  UInt_t nLeptons=0, nLeptons01=0, nLeptons04=0, nJets=0, nBJets=0, nJetsPU=0, nBJetsPU=0, nDiJets=0, matchedBJets=0, matchedLJets=0, matchedHiggs=0;
   
   Double_t bjet1_Pt, bjet1_Eta, bjet1_Phi, bjet1_Mass;
 	Double_t bjet2_Pt, bjet2_Eta, bjet2_Phi, bjet2_Mass;
@@ -72,6 +72,9 @@ void cleanUpMergedFiles(TString infilename="/afs/cern.ch/work/k/klawhorn/Snowmas
   intree->SetBranchAddress("nJetsPU",     	&nJetsPU);
   intree->SetBranchAddress("nBJetsPU",     	&nBJetsPU);
   intree->SetBranchAddress("nDiJets",     	&nDiJets);
+  intree->SetBranchAddress("matchedBJets",  &matchedBJets);
+  intree->SetBranchAddress("matchedLJets",  &matchedLJets);
+  intree->SetBranchAddress("matchedHiggs",  &matchedHiggs);
 
   TTree* infotree = (TTree*) infile->Get("Info"); assert(infotree);
   infotree->SetBranchAddress("nEvents",      &nEvents);
@@ -96,6 +99,9 @@ void cleanUpMergedFiles(TString infilename="/afs/cern.ch/work/k/klawhorn/Snowmas
 	outTree->Branch("nLeptons",				&nLeptons, 				"nLeptons/I");  
 	outTree->Branch("nLeptons01",			&nLeptons01, 			"nLeptons01/I");
 	outTree->Branch("nLeptons04",			&nLeptons04, 			"nLeptons04/I");
+	outTree->Branch("matchedBJets",	&matchedBJets,  "matchedBJets/I");
+	outTree->Branch("matchedLJets",	&matchedLJets,  "matchedLJets/I");
+	outTree->Branch("matchedHiggs",	&matchedHiggs,  "matchedHiggs/I");
 	outTree->Branch("bjet1_Pt",		&bjet1_Pt,  	"bjet1_Pt/D");
 	outTree->Branch("bjet1_Eta",	&bjet1_Eta,  	"bjet1_Eta/D");
 	outTree->Branch("bjet1_Phi",	&bjet1_Phi,  	"bjet1_Phi/D");

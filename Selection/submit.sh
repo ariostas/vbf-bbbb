@@ -5,7 +5,7 @@ rm -r LSFJOB_*
 mkdir -v /afs/cern.ch/work/a/ariostas/private/vbf-bbbb_temp/HHToBBBB_14TeV
 cd /afs/cern.ch/work/a/ariostas/private/vbf-bbbb_temp/HHToBBBB_14TeV
 /afs/cern.ch/project/eos/installation/0.2.41/bin/eos.select ls /store/group/upgrade/dihiggs_signal_4b/VBFHHTobbbb_TuneZ2_14TeV-madgraph/files/ | grep root > "HHToBBBB_14TeV.txt"
-split -l 150 HHToBBBB_14TeV.txt
+split -l 100 HHToBBBB_14TeV.txt
 rm HHToBBBB_14TeV.txt
 cd -
 for file in /afs/cern.ch/work/a/ariostas/private/vbf-bbbb_temp/HHToBBBB_14TeV/*
@@ -36,7 +36,7 @@ do
 	    mkdir -v /afs/cern.ch/work/a/ariostas/private/vbf-bbbb_temp/${array[0]}
         cd /afs/cern.ch/work/a/ariostas/private/vbf-bbbb_temp/${array[0]}
         /afs/cern.ch/project/eos/installation/0.2.41/bin/eos.select ls /store/group/upgrade/delphes/PhaseII_140PU_ProdJul28/${array[0]}/ | grep root > "${array[0]}.txt"
-        split -l 150 "${array[0]}.txt"
+        split -l 100 "${array[0]}.txt"
         rm "${array[0]}.txt"
         cd -
         for file in /afs/cern.ch/work/a/ariostas/private/vbf-bbbb_temp/${array[0]}/*

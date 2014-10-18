@@ -44,6 +44,7 @@ void selectDelphes(const TString inputfile="test.root", const Double_t xsec=0, c
 	TClonesArray *branchElectron = treeReader->UseBranch("Electron");
 	TClonesArray *branchPhoton = treeReader->UseBranch("Photon");
 	TClonesArray *branchJet = treeReader->UseBranch("Jet");
+	TClonesArray *branchParticle = treeReader->UseBranch("Particle");
 	
 	TString tempString = "Reading " + inputfile + "...";
 	tempString.Resize(75);
@@ -59,12 +60,14 @@ void selectDelphes(const TString inputfile="test.root", const Double_t xsec=0, c
 	Electron *electron;
 	Photon *photon;
 	Muon *muon;
+	GenParticle *particle;
 
 	// set up storage variables
 	Jet *bJet1=0, *bJet2=0, *bJet3=0, *bJet4=0, *Jet1=0, *Jet2=0;
 	Double_t weight=3000000*xsec;
 	UInt_t nEvents=0;
 	Int_t nLeptons=0, nLeptons01=0, nLeptons04=0, nJets=0, nJetsNoPU=0;
+	Int_t matchedBJets=0, matchedLJets=0;
 	
 	Double_t bjet1_Pt, bjet1_Eta, bjet1_Phi, bjet1_Mass;
 	Double_t bjet2_Pt, bjet2_Eta, bjet2_Phi, bjet2_Mass;
@@ -115,13 +118,16 @@ void selectDelphes(const TString inputfile="test.root", const Double_t xsec=0, c
 	outTree->Branch("nLeptons04",	&nLeptons04,   	"nLeptons04/I");
 	outTree->Branch("nJets",		&nJets,    		"nJets/I");
 	outTree->Branch("nJetsNoPU",	&nJetsNoPU,  	"nJetsNoPU/I");
+	outTree->Branch("matchedBJets",	&matchedBJets,  "matchedBJets/I");
+	outTree->Branch("matchedLJets",	&matchedLJets,  "matchedLJets/I");
 
 
 	for (Int_t iEntry=0; iEntry<numberOfEntries; iEntry++) { // entry loop
 		treeReader->ReadEntry(iEntry);
 
 		// Reset variables
-		nLeptons=nLeptons01=nLeptons04=nJets=nJetsNoPU=0;
+		nLeptons=nLeptons01=nLeptons04=nJets=nJetsNoPU=matchedBJets=matchedLJets=0;
+		bJet1=bJet2=bJet3=bJet4=Jet1=Jet2=0;
 		
 		weight=3000000*xsec;
 		if(signalFlag == 0) weight *= ((LHEFEvent*) branchEvent->At(0))->Weight;
@@ -237,18 +243,42 @@ void selectDelphes(const TString inputfile="test.root", const Double_t xsec=0, c
 		// Check if there are four bjets and two light jets
 		if((bJet1) && (bJet2) && (bJet3) && (bJet4) && (Jet1) && (Jet2)){
 			
+			// Match with generator level objects
+			bool bj1isMatched=false, bj2isMatched=false, bj3isMatched=false, bj4isMatched=false, j1isMatched=false, j2isMatched=false;
+			
+			for (Int_t iParticle=0; iParticle<branchParticle->GetEntries(); iParticle++) { 
+				particle = (GenParticle*) branchParticle->At(iParticle);
+				
+				if(abs(particle->PID) == 5){
+				
+				if(deltaR(particle->Eta, bJet1->Eta, particle->Phi, bJet1->Phi) < 0.4 && !bj1isMatched){ matchedBJets++; bj1isMatched=true;}
+				else if(deltaR(particle->Eta, bJet2->Eta, particle->Phi, bJet2->Phi) < 0.4 && !bj2isMatched){ matchedBJets++; bj2isMatched=true;}
+				else if(deltaR(particle->Eta, bJet3->Eta, particle->Phi, bJet3->Phi) < 0.4 && !bj3isMatched){ matchedBJets++; bj3isMatched=true;}
+				else if(deltaR(particle->Eta, bJet4->Eta, particle->Phi, bJet4->Phi) < 0.4 && !bj4isMatched){ matchedBJets++; bj4isMatched=true;}
+				
+				}
+			
+				else if(abs(particle->PID) >= 1 && abs(particle->PID) <= 4){
+				
+					if(deltaR(particle->Eta, Jet1->Eta, particle->Phi, Jet1->Phi) < 0.4 && !j1isMatched){ matchedLJets++; j1isMatched=true;}
+					else if(deltaR(particle->Eta, Jet2->Eta, particle->Phi, Jet2->Phi) < 0.4 && !j2isMatched){ matchedLJets++; j2isMatched=true;}
+				
+				}
+			}
+			
+			// Count leptons
 			nLeptons = branchElectron->GetEntries() + branchMuon->GetEntries();
 			
 			for (Int_t iElectron=0; iElectron<branchElectron->GetEntries(); iElectron++) { 
 				electron = (Electron*) branchElectron->At(iElectron);
-				if(electron->IsolationVar < 0.1 && electron->PT > 10) nLeptons01++;
-				if(electron->IsolationVar < 0.4 && electron->PT > 10) nLeptons04++;
+				if(electron->IsolationVar < 0.1 && electron->PT > 25) nLeptons01++;
+				if(electron->IsolationVar < 0.4 && electron->PT > 25) nLeptons04++;
 			}
 			
 			for (Int_t iMuon=0; iMuon<branchMuon->GetEntries(); iMuon++) { 
 				muon = (Muon*) branchMuon->At(iMuon);
-				if(muon->IsolationVar < 0.1 && muon->PT > 10) nLeptons01++;
-				if(muon->IsolationVar < 0.4 && muon->PT > 10) nLeptons04++;
+				if(muon->IsolationVar < 0.1 && muon->PT > 25) nLeptons01++;
+				if(muon->IsolationVar < 0.4 && muon->PT > 25) nLeptons04++;
 			}
 			
 			bjet1_Pt = bJet1->PT;

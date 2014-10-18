@@ -5,7 +5,7 @@
    cross_sec=$4
  signal_flag=$5
 
-cd /afs/cern.ch/user/a/ariostas/vbf-bbbb/Selection/
+cd /afs/cern.ch/user/a/ariostas/vbf-bbbb/ExperimentalSelection/
 
 h=`basename $0`
 echo "Script:    $h"

@@ -41,6 +41,7 @@ void selectDelphes(const TString inputfile="test.root", const Double_t xsec=0, c
 	TClonesArray *branchElectron = treeReader->UseBranch("Electron");
 	TClonesArray *branchPhoton = treeReader->UseBranch("Photon");
 	TClonesArray *branchJet = treeReader->UseBranch("Jet");
+	TClonesArray *branchParticle = treeReader->UseBranch("Particle");
 	
 	TString tempString = "Reading " + inputfile + "...";
 	tempString.Resize(75);
@@ -56,12 +57,12 @@ void selectDelphes(const TString inputfile="test.root", const Double_t xsec=0, c
 	Photon *photon;
 	Electron *electron;
 	Muon *muon;
-
+	GenParticle *particle;
 	
 	Double_t weight=3000000*xsec;
 
 	// set up output variables and file
-	UInt_t nEvents, nDiJets, nJets, nBJets, nJetsPU, nBJetsPU, nLeptons, nLeptons01, nLeptons04;
+	UInt_t nEvents, nDiJets, nJets, nBJets, nJetsPU, nBJetsPU, nLeptons, nLeptons01, nLeptons04, matchedBJets, matchedLJets, matchedHiggs;
 	
 	Double_t bjet1_Pt, bjet1_Eta, bjet1_Phi, bjet1_Mass;
 	Double_t bjet2_Pt, bjet2_Eta, bjet2_Phi, bjet2_Mass;
@@ -82,15 +83,18 @@ void selectDelphes(const TString inputfile="test.root", const Double_t xsec=0, c
 
 	// tree to hold information about selected events
 	TTree *outTree = new TTree("Events", "Events");
-	outTree->Branch("weight",				&weight,    			"weight/D");  
-	outTree->Branch("nJets",				&nJets,    				"nJets/i");
-	outTree->Branch("nDiJets",				&nDiJets,    			"nDiJets/i");
-	outTree->Branch("nBJets",				&nBJets,    			"nBJets/i"); 
-	outTree->Branch("nJetsPU",				&nJetsPU,    			"nJetsPU/i"); 
-	outTree->Branch("nBJetsPU",				&nBJetsPU,    			"nBJetsPU/i"); 
-	outTree->Branch("nLeptons",				&nLeptons, 				"nLeptons/i");  
-	outTree->Branch("nLeptons01",			&nLeptons01, 			"nLeptons01/i");
-	outTree->Branch("nLeptons04",			&nLeptons04, 			"nLeptons04/i");
+	outTree->Branch("weight",		&weight,    	"weight/D");  
+	outTree->Branch("nJets",		&nJets,    		"nJets/i");
+	outTree->Branch("nDiJets",		&nDiJets,    	"nDiJets/i");
+	outTree->Branch("nBJets",		&nBJets,    	"nBJets/i"); 
+	outTree->Branch("nJetsPU",		&nJetsPU,    	"nJetsPU/i"); 
+	outTree->Branch("nBJetsPU",		&nBJetsPU,    	"nBJetsPU/i"); 
+	outTree->Branch("nLeptons",		&nLeptons, 		"nLeptons/i");  
+	outTree->Branch("nLeptons01",	&nLeptons01, 	"nLeptons01/i");
+	outTree->Branch("nLeptons04",	&nLeptons04, 	"nLeptons04/i");
+	outTree->Branch("matchedBJets",	&matchedBJets,  "matchedBJets/i");
+	outTree->Branch("matchedLJets",	&matchedLJets,  "matchedLJets/i");
+	outTree->Branch("matchedHiggs",	&matchedHiggs,  "matchedHiggs/i");
 	outTree->Branch("bjet1_Pt",		&bjet1_Pt,  	"bjet1_Pt/D");
 	outTree->Branch("bjet1_Eta",	&bjet1_Eta,  	"bjet1_Eta/D");
 	outTree->Branch("bjet1_Phi",	&bjet1_Phi,  	"bjet1_Phi/D");
@@ -124,8 +128,9 @@ void selectDelphes(const TString inputfile="test.root", const Double_t xsec=0, c
 		TLorentzVector tempv1, tempv2, tempDiJet, tempDiJet1, tempDiJet2;
 
 		// Reset index variables
-		nDiJets=nJets=nBJets=nJetsPU=nBJetsPU=nLeptons=nLeptons01=nLeptons04=0;
-		jet1=jet2=0;
+		nDiJets=nJets=nBJets=nJetsPU=nBJetsPU=nLeptons=nLeptons01=nLeptons04=matchedBJets=matchedLJets=matchedHiggs=0;
+		jet1=jet2=jet3=jet4=0;
+		selectedJets.clear(); orderedJets.clear(); selectedLightJets.clear(); orderedLightJets.clear();
 		
 		weight=3000000*xsec;
 		if(signalFlag == 0) weight *= ((LHEFEvent*) branchEvent->At(0))->Weight;
@@ -230,7 +235,7 @@ void selectDelphes(const TString inputfile="test.root", const Double_t xsec=0, c
 				tempv2.SetPtEtaPhiM(jet2->PT, jet2->Eta, jet2->Phi, jet2->Mass);
 				tempDiJet = tempv1 + tempv2;
 				
-				if((tempDiJet.Pt() <= 100) || (tempDiJet.M() <= 80) || (tempDiJet.M() >= 140) || (dRtemp <= 0.75) || (dRtemp >= 1.75)) continue;
+				if((tempDiJet.Pt() <= 100) || (tempDiJet.M() <= 80) || (tempDiJet.M() >= 140) || (dRtemp <= 0.5) || (dRtemp >= 2)) continue;
 					
 				selectedJets.push_back(jet1);
 				selectedJets.push_back(jet2);
@@ -314,19 +319,48 @@ void selectDelphes(const TString inputfile="test.root", const Double_t xsec=0, c
 		if(selectedLightJets.size()%2 != 0){cout << "\n\n\n\n\nError. Check the code\n\n\n\n\n" << endl; return;}
 		
 		if(selectedLightJets.size() < 2) continue;
+		
+		bool bj1isMatched=false, bj2isMatched=false, bj3isMatched=false, bj4isMatched=false, j1isMatched=false, j2isMatched=false, h1isMatched=false, h2isMatched=false;
+		
+		for (Int_t iParticle=0; iParticle<branchParticle->GetEntries(); iParticle++) { 
+			particle = (GenParticle*) branchParticle->At(iParticle);
+			
+			if(abs(particle->PID) == 5){
+				
+				if(deltaR(particle->Eta, selectedJets.at(0)->Eta, particle->Phi, selectedJets.at(0)->Phi) < 0.4 && !bj1isMatched){ matchedBJets++; bj1isMatched=true;}
+				else if(deltaR(particle->Eta, selectedJets.at(1)->Eta, particle->Phi, selectedJets.at(1)->Phi) < 0.4 && !bj2isMatched){ matchedBJets++; bj2isMatched=true;}
+				else if(deltaR(particle->Eta, selectedJets.at(2)->Eta, particle->Phi, selectedJets.at(2)->Phi) < 0.4 && !bj3isMatched){ matchedBJets++; bj3isMatched=true;}
+				else if(deltaR(particle->Eta, selectedJets.at(3)->Eta, particle->Phi, selectedJets.at(3)->Phi) < 0.4 && !bj4isMatched){ matchedBJets++; bj4isMatched=true;}
+				
+			}
+			
+			else if(abs(particle->PID) >= 1 && abs(particle->PID) <= 4){
+				
+				if(deltaR(particle->Eta, selectedLightJets.at(0)->Eta, particle->Phi, selectedLightJets.at(0)->Phi) < 0.4 && !j1isMatched){ matchedLJets++; j1isMatched=true;}
+				else if(deltaR(particle->Eta, selectedLightJets.at(1)->Eta, particle->Phi, selectedLightJets.at(1)->Phi) < 0.4 && !j2isMatched){ matchedLJets++; j2isMatched=true;}
+				
+			}
+			
+			if(abs(particle->PID) == 25){
+				
+				if(deltaR(particle->Eta, tempDiJet1.Eta(), particle->Phi, tempDiJet1.Phi()) < 0.4 && !h1isMatched){ matchedHiggs++; h1isMatched=true;}
+				else if(deltaR(particle->Eta, tempDiJet2.Eta(), particle->Phi, tempDiJet2.Phi()) < 0.4 && !h2isMatched){ matchedHiggs++; h2isMatched=true;}
+				
+			}
+		}
 			
 		nLeptons = branchElectron->GetEntries() + branchMuon->GetEntries();
 			
 		for (Int_t iElectron=0; iElectron<branchElectron->GetEntries(); iElectron++) { 
 			electron = (Electron*) branchElectron->At(iElectron);
-			if(electron->IsolationVar < 0.1) nLeptons01++;
-			if(electron->IsolationVar < 0.4) nLeptons04++;
+			if(electron->IsolationVar < 0.1 && electron->PT > 25) nLeptons01++;
+			if(electron->IsolationVar < 0.4 && electron->PT > 25) nLeptons04++;
 		}
 		
 		for (Int_t iMuon=0; iMuon<branchMuon->GetEntries(); iMuon++) { 
 			muon = (Muon*) branchMuon->At(iMuon);
-			if(muon->IsolationVar < 0.1) nLeptons01++;
-			if(muon->IsolationVar < 0.4) nLeptons04++;
+			if(muon->IsolationVar < 0.1 && muon->PT > 25) nLeptons01++;
+			if(muon->IsolationVar < 0.4 && muon->PT > 25) nLeptons04++;
 		}
 		
 		bjet1_Pt = 		selectedJets.at(0)->PT;
